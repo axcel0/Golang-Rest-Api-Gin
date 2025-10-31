@@ -9,6 +9,7 @@ import (
 	"Go-Lang-project-01/internal/repository"
 	"Go-Lang-project-01/internal/services"
 	"Go-Lang-project-01/pkg/database"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -38,10 +39,10 @@ func main() {
 	r := gin.New()
 
 	// Apply global middleware
-	r.Use(middleware.Recovery())      // Panic recovery
-	r.Use(middleware.Logger())        // Custom logger
-	r.Use(middleware.CORS())          // CORS support
-	r.Use(middleware.ErrorHandler())  // Centralized error handling
+	r.Use(middleware.Recovery())     // Panic recovery
+	r.Use(middleware.Logger())       // Custom logger
+	r.Use(middleware.CORS())         // CORS support
+	r.Use(middleware.ErrorHandler()) // Centralized error handling
 
 	// Health check routes
 	r.GET("/health", healthHandler.HealthCheck)
@@ -54,7 +55,7 @@ func main() {
 		users := v1.Group("/users")
 		{
 			users.GET("", userHandler.GetAllUsers)
-			users.GET("/stats", userHandler.GetUserStats)     // Must be before /:id
+			users.GET("/stats", userHandler.GetUserStats) // Must be before /:id
 			users.GET("/:id", userHandler.GetUserByID)
 			users.POST("", userHandler.CreateUser)
 			users.POST("/batch", userHandler.BatchCreateUsers)

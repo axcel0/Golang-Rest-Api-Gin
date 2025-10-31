@@ -1,0 +1,31 @@
+# Application Configuration
+# Override these values using environment variables
+
+app:
+  name: "Go-Lang-project-01"
+  version: "1.0.0"
+  environment: "development" # development, staging, production
+
+server:
+  port: "8080"
+  mode: "debug" # debug or release
+  readtimeout: 10s
+  writetimeout: 10s
+  idletimeout: 60s
+
+database:
+  driver: "sqlite" # sqlite, postgres, mysql
+  host: "localhost"
+  port: 5432
+  user: "postgres"
+  password: ""
+  dbname: "goproject.db"
+  sslmode: "disable"
+  maxidleconns: 10
+  maxopenconns: 100
+  connmaxlifetime: 1h
+
+logger:
+  level: "info" # debug, info, warn, error
+  format: "json" # json or console
+  outputpath: "stdout"

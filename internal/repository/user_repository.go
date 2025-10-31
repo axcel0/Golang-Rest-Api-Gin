@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"Go-Lang-project-01/internal/models"
 	"gorm.io/gorm"
@@ -30,6 +31,45 @@ func (r *UserRepository) GetAll(ctx context.Context) ([]*models.User, error) {
 	}
 	
 	return users, nil
+}
+
+// GetAllPaginated returns paginated users with search and filtering
+func (r *UserRepository) GetAllPaginated(ctx context.Context, query models.PaginationQuery) ([]*models.User, int64, error) {
+	var users []*models.User
+	var total int64
+	
+	// Base query
+	db := r.db.WithContext(ctx).Model(&models.User{})
+	
+	// Apply search filter
+	if query.Search != "" {
+		searchPattern := "%" + strings.ToLower(query.Search) + "%"
+		db = db.Where("LOWER(name) LIKE ? OR LOWER(email) LIKE ?", searchPattern, searchPattern)
+	}
+	
+	// Count total records
+	if err := db.Count(&total).Error; err != nil {
+		return nil, 0, fmt.Errorf("failed to count users: %w", err)
+	}
+	
+	// Apply sorting
+	sortField := "created_at"
+	sortOrder := "desc"
+	if query.Sort != "" {
+		sortField = query.Sort
+	}
+	if query.Order != "" {
+		sortOrder = query.Order
+	}
+	db = db.Order(fmt.Sprintf("%s %s", sortField, sortOrder))
+	
+	// Apply pagination
+	offset := (query.Page - 1) * query.Limit
+	if err := db.Offset(offset).Limit(query.Limit).Find(&users).Error; err != nil {
+		return nil, 0, fmt.Errorf("failed to get users: %w", err)
+	}
+	
+	return users, total, nil
 }
 
 // GetByID returns a user by ID

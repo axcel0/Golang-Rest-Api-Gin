@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"Go-Lang-project-01/pkg/database"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -18,7 +19,7 @@ func NewHealthHandler() *HealthHandler {
 // HealthCheck checks if service is running
 func (h *HealthHandler) HealthCheck(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
-		"status": "OK",
+		"status":  "OK",
 		"service": "Go-Lang-project-01",
 	})
 }
@@ -30,7 +31,7 @@ func (h *HealthHandler) ReadinessCheck(c *gin.Context) {
 	sqlDB, err := db.DB()
 	if err != nil {
 		c.JSON(http.StatusServiceUnavailable, gin.H{
-			"status": "unavailable",
+			"status":   "unavailable",
 			"database": "disconnected",
 		})
 		return
@@ -38,14 +39,14 @@ func (h *HealthHandler) ReadinessCheck(c *gin.Context) {
 
 	if err := sqlDB.Ping(); err != nil {
 		c.JSON(http.StatusServiceUnavailable, gin.H{
-			"status": "unavailable",
+			"status":   "unavailable",
 			"database": "ping failed",
 		})
 		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"status": "ready",
+		"status":   "ready",
 		"database": "connected",
 	})
 }

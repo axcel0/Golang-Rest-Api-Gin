@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"Go-Lang-project-01/internal/models"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -15,7 +16,7 @@ func ErrorHandler() gin.HandlerFunc {
 		// Check if there are any errors
 		if len(c.Errors) > 0 {
 			err := c.Errors.Last()
-			
+
 			c.JSON(http.StatusInternalServerError, models.Response{
 				Success: false,
 				Message: err.Error(),

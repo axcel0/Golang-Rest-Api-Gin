@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"math"
 	"sync"
 	"time"
 
@@ -28,6 +29,44 @@ func (s *UserService) GetAllUsers(ctx context.Context) ([]*models.User, error) {
 	return s.repo.GetAll(ctx)
 }
 
+// GetAllUsersPaginated returns paginated users
+func (s *UserService) GetAllUsersPaginated(ctx context.Context, query models.PaginationQuery) ([]*models.User, models.PaginationMeta, error) {
+	// Set default values
+	if query.Page < 1 {
+		query.Page = 1
+	}
+	if query.Limit < 1 {
+		query.Limit = 10
+	}
+	if query.Limit > 100 {
+		query.Limit = 100
+	}
+	if query.Sort == "" {
+		query.Sort = "created_at"
+	}
+	if query.Order == "" {
+		query.Order = "desc"
+	}
+
+	// Get paginated data
+	users, total, err := s.repo.GetAllPaginated(ctx, query)
+	if err != nil {
+		return nil, models.PaginationMeta{}, err
+	}
+
+	// Calculate pagination metadata
+	totalPages := int(math.Ceil(float64(total) / float64(query.Limit)))
+	
+	meta := models.PaginationMeta{
+		Page:       query.Page,
+		Limit:      query.Limit,
+		Total:      total,
+		TotalPages: totalPages,
+	}
+
+	return users, meta, nil
+}
+
 // GetUserByID returns a user by ID
 func (s *UserService) GetUserByID(ctx context.Context, id uint) (*models.User, error) {
 	return s.repo.GetByID(ctx, id)
@@ -35,23 +74,12 @@ func (s *UserService) GetUserByID(ctx context.Context, id uint) (*models.User, e
 
 // CreateUser creates a new user with validation
 func (s *UserService) CreateUser(ctx context.Context, req *models.CreateUserRequest) (*models.User, error) {
-	// Validation
-	if req.Name == "" {
-		return nil, errors.New("name is required")
-	}
-	if req.Email == "" {
-		return nil, errors.New("email is required")
-	}
-	if req.Age <= 0 {
-		return nil, errors.New("age must be positive")
-	}
-
+	// Validation is now handled by Gin's validator
+	// Additional business logic validation can be added here
+	
 	// Check if email already exists
 	existingUser, err := s.repo.GetByEmail(ctx, req.Email)
-	if err != nil {
-		return nil, err
-	}
-	if existingUser != nil {
+	if err == nil && existingUser != nil {
 		return nil, errors.New("email already exists")
 	}
 
@@ -78,23 +106,20 @@ func (s *UserService) UpdateUser(ctx context.Context, id uint, req *models.Updat
 		return nil, err
 	}
 
-	// Update fields
-	if req.Name != "" {
-		user.Name = req.Name
+	// Update fields (handle pointer types)
+	if req.Name != nil && *req.Name != "" {
+		user.Name = *req.Name
 	}
-	if req.Email != "" {
+	if req.Email != nil && *req.Email != "" {
 		// Check if new email already exists
-		existingUser, err := s.repo.GetByEmail(ctx, req.Email)
-		if err != nil {
-			return nil, err
-		}
-		if existingUser != nil && existingUser.ID != id {
+		existingUser, err := s.repo.GetByEmail(ctx, *req.Email)
+		if err == nil && existingUser != nil && existingUser.ID != id {
 			return nil, errors.New("email already exists")
 		}
-		user.Email = req.Email
+		user.Email = *req.Email
 	}
-	if req.Age > 0 {
-		user.Age = req.Age
+	if req.Age != nil && *req.Age > 0 {
+		user.Age = *req.Age
 	}
 
 	if err := s.repo.Update(ctx, user); err != nil {
