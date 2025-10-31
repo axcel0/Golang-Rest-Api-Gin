@@ -231,3 +231,26 @@ func (s *UserService) GetUserStats(ctx context.Context) (map[string]interface{},
 		"inactive_users": totalUsers - activeUsers,
 	}, nil
 }
+
+// UpdateUserRole updates user role (superadmin only operation)
+func (s *UserService) UpdateUserRole(ctx context.Context, userID uint, newRole string) (*models.User, error) {
+	// Validate role
+	role := models.Role(newRole)
+	if !role.IsValid() {
+		return nil, errors.New("invalid role")
+	}
+
+	// Get user
+	user, err := s.repo.GetByID(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Update role
+	user.Role = newRole
+	if err := s.repo.Update(ctx, user); err != nil {
+		return nil, err
+	}
+
+	return user, nil
+}

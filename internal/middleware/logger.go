@@ -1,36 +1,44 @@
 package middleware
 
 import (
-	"log"
 	"time"
+
+	"Go-Lang-project-01/pkg/logger"
 
 	"github.com/gin-gonic/gin"
 )
 
-// Logger middleware for structured logging
+// Logger middleware for structured logging with slog
 func Logger() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// Start timer
 		start := time.Now()
 		path := c.Request.URL.Path
 		method := c.Request.Method
+		clientIP := c.ClientIP()
 
 		// Process request
 		c.Next()
 
-		// Calculate latency
+		// Calculate latency and log with structured fields
 		latency := time.Since(start)
 		statusCode := c.Writer.Status()
-		clientIP := c.ClientIP()
 
-		// Log with colors
-		log.Printf("[GIN] %s | %3d | %13v | %15s | %-7s %s",
-			time.Now().Format("2006/01/02 - 15:04:05"),
-			statusCode,
-			latency,
-			clientIP,
-			method,
-			path,
+		// Determine log level based on status code
+		logFunc := logger.Info
+		if statusCode >= 500 {
+			logFunc = logger.Error
+		} else if statusCode >= 400 {
+			logFunc = logger.Warn
+		}
+
+		logFunc("HTTP Request",
+			"method", method,
+			"path", path,
+			"status", statusCode,
+			"latency", latency.String(),
+			"client_ip", clientIP,
+			"user_agent", c.Request.UserAgent(),
 		)
 	}
 }

@@ -14,6 +14,7 @@ type Config struct {
 	Database DatabaseConfig
 	Logger   LoggerConfig
 	App      AppConfig
+	JWT      JWTConfig
 }
 
 // ServerConfig holds server configuration
@@ -48,9 +49,18 @@ type LoggerConfig struct {
 
 // AppConfig holds application-level configuration
 type AppConfig struct {
-	Name        string
-	Version     string
-	Environment string // "development", "staging", "production"
+	Name               string
+	Version            string
+	Environment        string // "development", "staging", "production"
+	RateLimitPerMinute int    // Requests per minute per IP
+	RateLimitBurst     int    // Burst size for rate limiter
+}
+
+// JWTConfig holds JWT authentication configuration
+type JWTConfig struct {
+	SecretKey            string
+	AccessTokenDuration  string
+	RefreshTokenDuration string
 }
 
 // LoadConfig loads configuration from environment and config file using Viper
@@ -115,6 +125,13 @@ func setDefaults() {
 	viper.SetDefault("app.name", "Go-Lang-project-01")
 	viper.SetDefault("app.version", "1.0.0")
 	viper.SetDefault("app.environment", "development")
+	viper.SetDefault("app.ratelimitperminute", 100) // 100 requests per minute
+	viper.SetDefault("app.ratelimitburst", 10)      // Allow burst of 10 requests
+
+	// JWT defaults
+	viper.SetDefault("jwt.secretkey", "change-this-secret-key-in-production")
+	viper.SetDefault("jwt.accesstokenduration", "24h")
+	viper.SetDefault("jwt.refreshtokenduration", "168h") // 7 days
 }
 
 // GetDSN returns database connection string for PostgreSQL

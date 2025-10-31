@@ -16,7 +16,14 @@ func NewHealthHandler() *HealthHandler {
 	return &HealthHandler{}
 }
 
-// HealthCheck checks if service is running
+// HealthCheck godoc
+// @Summary      Health check
+// @Description  Check if the service is running
+// @Tags         health
+// @Accept       json
+// @Produce      json
+// @Success      200  {object}  map[string]string
+// @Router       /health [get]
 func (h *HealthHandler) HealthCheck(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"status":  "OK",
@@ -24,7 +31,15 @@ func (h *HealthHandler) HealthCheck(c *gin.Context) {
 	})
 }
 
-// ReadinessCheck checks if service is ready (includes DB check)
+// ReadinessCheck godoc
+// @Summary      Readiness check
+// @Description  Check if the service is ready to accept requests (includes database check)
+// @Tags         health
+// @Accept       json
+// @Produce      json
+// @Success      200  {object}  map[string]string
+// @Failure      503  {object}  map[string]string
+// @Router       /ready [get]
 func (h *HealthHandler) ReadinessCheck(c *gin.Context) {
 	// Check database connection
 	db := database.GetDB()

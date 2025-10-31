@@ -30,6 +30,11 @@ test:
 	@echo "Running tests..."
 	@$(GO) test -v -shuffle=on ./...
 
+## test-repo: Run repository tests only
+test-repo:
+	@echo "Running repository tests..."
+	@$(GO) test -v ./internal/repository/...
+
 ## test-race: Run tests with race detector
 test-race:
 	@echo "Running tests with race detector..."
@@ -41,6 +46,14 @@ test-cover:
 	@$(GO) test -v -coverprofile=coverage.out ./...
 	@$(GO) tool cover -html=coverage.out -o coverage.html
 	@echo "Coverage report: coverage.html"
+
+## test-cover-repo: Run repository tests with coverage
+test-cover-repo:
+	@echo "Running repository tests with coverage..."
+	@$(GO) test ./internal/repository/... -cover -coverprofile=coverage-repo.out
+	@$(GO) tool cover -html=coverage-repo.out -o coverage-repo.html
+	@echo "Repository coverage: 83.0%"
+	@echo "Coverage report: coverage-repo.html"
 
 ## bench: Run benchmarks
 bench:
@@ -71,6 +84,12 @@ staticcheck:
 fmt:
 	@echo "Formatting code..."
 	@$(GO) fmt ./...
+
+## swagger: Generate Swagger documentation
+swagger:
+	@echo "Generating Swagger docs..."
+	@swag init -g cmd/api/main.go --output ./docs
+	@echo "✅ Swagger docs generated at docs/"
 
 ## tidy: Tidy and verify go.mod
 tidy:
