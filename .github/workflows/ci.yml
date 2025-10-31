@@ -1,0 +1,72 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  test:
+    name: Test & Lint
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: '1.25.3'
+        cache: true
+        
+    - name: Verify dependencies
+      run: |
+        go mod download
+        go mod verify
+        
+    - name: Format check
+      run: |
+        if [ "$(gofmt -s -l . | wc -l)" -gt 0 ]; then
+          echo "Code is not formatted. Run 'make fmt'"
+          gofmt -s -l .
+          exit 1
+        fi
+        
+    - name: Go vet
+      run: go vet ./...
+      
+    - name: Install staticcheck
+      run: go install honnef.co/go/tools/cmd/staticcheck@latest
+      
+    - name: Run staticcheck (SA1019 deprecated check)
+      run: staticcheck ./...
+      
+    - name: Install golangci-lint
+      run: |
+        curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.62.2
+        
+    - name: Run golangci-lint
+      run: golangci-lint run --timeout=5m
+      
+    - name: Install govulncheck
+      run: go install golang.org/x/vuln/cmd/govulncheck@latest
+      
+    - name: Check for vulnerabilities
+      run: govulncheck ./...
+      
+    - name: Run tests
+      run: go test -v -race -shuffle=on -coverprofile=coverage.out ./...
+      
+    - name: Coverage report
+      run: go tool cover -func=coverage.out
+      
+    - name: Build
+      run: go build -v -o bin/server ./cmd/api/main.go
+      
+    - name: Upload coverage
+      uses: codecov/codecov-action@v4
+      with:
+        file: ./coverage.out
+        fail_ci_if_error: false

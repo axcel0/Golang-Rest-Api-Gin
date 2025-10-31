@@ -1,0 +1,18 @@
+-- +migrate Up
+CREATE TABLE IF NOT EXISTS users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    email TEXT NOT NULL UNIQUE,
+    age INTEGER NOT NULL,
+    active INTEGER NOT NULL DEFAULT 1,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
+CREATE INDEX IF NOT EXISTS idx_users_active ON users(active);
+
+-- +migrate Down
+DROP INDEX IF EXISTS idx_users_active;
+DROP INDEX IF EXISTS idx_users_email;
+DROP TABLE IF EXISTS users;

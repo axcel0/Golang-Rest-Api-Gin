@@ -66,7 +66,7 @@ func ValidationErrorResponse(c *gin.Context, err error) {
 // getValidationErrorMessage returns human-readable error message for validation
 func getValidationErrorMessage(fe validator.FieldError) string {
 	field := strings.ToLower(fe.Field())
-	
+
 	switch fe.Tag() {
 	case "required":
 		return field + " is required"

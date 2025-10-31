@@ -1,0 +1,78 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/golangci/golangci-lint/master/.golangci.reference.yml
+# golangci-lint configuration
+# https://golangci-lint.run/usage/configuration/
+
+run:
+  timeout: 5m
+  tests: true
+  modules-download-mode: readonly
+
+linters:
+  enable:
+    - errcheck      # Check for unchecked errors
+    - gosimple      # Simplify code
+    - govet         # Vet examines Go source code
+    - ineffassign   # Detect ineffectual assignments
+    - staticcheck   # SA1019 (deprecated) & other static checks
+    - unused        # Check for unused code
+    - gofmt         # Check formatting
+    - goimports     # Check imports
+    - misspell      # Check for misspellings
+    - gocritic      # Opinionated code checker
+    - revive        # Fast linter
+    - gosec         # Security checker
+    - depguard      # Check for deprecated/forbidden packages
+    - bodyclose     # Check for HTTP body close
+    - noctx         # Check for missing context
+    - unconvert     # Remove unnecessary conversions
+    - unparam       # Check for unused function parameters
+    - wastedassign  # Find wasted assignment statements
+
+linters-settings:
+  errcheck:
+    check-type-assertions: true
+    check-blank: true
+  
+  govet:
+    shadow:
+      strict: true
+    enable-all: true
+  
+  staticcheck:
+    checks: ["all", "SA1019"] # SA1019 = deprecated code
+  
+  gosec:
+    excludes:
+      - G104 # Duplicates errcheck
+  
+  depguard:
+    rules:
+      main:
+        deny:
+          - pkg: "github.com/sirupsen/logrus"
+            desc: "Use log/slog from stdlib instead"
+          - pkg: "go.uber.org/zap"
+            desc: "Use log/slog from stdlib instead (Go 1.21+)"
+          - pkg: "github.com/pkg/errors"
+            desc: "Use fmt.Errorf with %w instead (Go 1.13+)"
+          - pkg: "io/ioutil"
+            desc: "Deprecated since Go 1.16, use io or os packages"
+          - pkg: "github.com/dgrijalva/jwt-go"
+            desc: "Unmaintained, use github.com/golang-jwt/jwt/v5"
+
+issues:
+  max-issues-per-linter: 0
+  max-same-issues: 0
+  
+  exclude-rules:
+    # Exclude some linters from running on tests files
+    - path: _test\.go
+      linters:
+        - gosec
+        - dupl
+        - gocritic
+    
+    # Exclude known false positives
+    - path: cmd/
+      linters:
+        - gocritic

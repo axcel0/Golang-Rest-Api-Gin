@@ -56,7 +56,7 @@ func (s *UserService) GetAllUsersPaginated(ctx context.Context, query models.Pag
 
 	// Calculate pagination metadata
 	totalPages := int(math.Ceil(float64(total) / float64(query.Limit)))
-	
+
 	meta := models.PaginationMeta{
 		Page:       query.Page,
 		Limit:      query.Limit,
@@ -76,7 +76,7 @@ func (s *UserService) GetUserByID(ctx context.Context, id uint) (*models.User, e
 func (s *UserService) CreateUser(ctx context.Context, req *models.CreateUserRequest) (*models.User, error) {
 	// Validation is now handled by Gin's validator
 	// Additional business logic validation can be added here
-	
+
 	// Check if email already exists
 	existingUser, err := s.repo.GetByEmail(ctx, req.Email)
 	if err == nil && existingUser != nil {
@@ -150,7 +150,7 @@ func (s *UserService) BatchCreateUsers(ctx context.Context, requests []*models.C
 		wg.Add(1)
 		go func(index int, request *models.CreateUserRequest) {
 			defer wg.Done()
-			
+
 			// Acquire semaphore
 			semaphore <- struct{}{}
 			defer func() { <-semaphore }()
@@ -160,10 +160,10 @@ func (s *UserService) BatchCreateUsers(ctx context.Context, requests []*models.C
 			defer cancel()
 
 			user, err := s.CreateUser(goCtx, request)
-			
+
 			mu.Lock()
 			defer mu.Unlock()
-			
+
 			if err != nil {
 				errList = append(errList, fmt.Errorf("user %d: %w", index, err))
 			} else {

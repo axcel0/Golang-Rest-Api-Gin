@@ -24,12 +24,12 @@ func NewUserRepository(db *gorm.DB) *UserRepository {
 // GetAll returns all users (with goroutine support via context)
 func (r *UserRepository) GetAll(ctx context.Context) ([]*models.User, error) {
 	var users []*models.User
-	
+
 	// Using context for cancellation support
 	if err := r.db.WithContext(ctx).Find(&users).Error; err != nil {
 		return nil, fmt.Errorf("failed to get users: %w", err)
 	}
-	
+
 	return users, nil
 }
 
@@ -37,21 +37,21 @@ func (r *UserRepository) GetAll(ctx context.Context) ([]*models.User, error) {
 func (r *UserRepository) GetAllPaginated(ctx context.Context, query models.PaginationQuery) ([]*models.User, int64, error) {
 	var users []*models.User
 	var total int64
-	
+
 	// Base query
 	db := r.db.WithContext(ctx).Model(&models.User{})
-	
+
 	// Apply search filter
 	if query.Search != "" {
 		searchPattern := "%" + strings.ToLower(query.Search) + "%"
 		db = db.Where("LOWER(name) LIKE ? OR LOWER(email) LIKE ?", searchPattern, searchPattern)
 	}
-	
+
 	// Count total records
 	if err := db.Count(&total).Error; err != nil {
 		return nil, 0, fmt.Errorf("failed to count users: %w", err)
 	}
-	
+
 	// Apply sorting
 	sortField := "created_at"
 	sortOrder := "desc"
@@ -62,41 +62,41 @@ func (r *UserRepository) GetAllPaginated(ctx context.Context, query models.Pagin
 		sortOrder = query.Order
 	}
 	db = db.Order(fmt.Sprintf("%s %s", sortField, sortOrder))
-	
+
 	// Apply pagination
 	offset := (query.Page - 1) * query.Limit
 	if err := db.Offset(offset).Limit(query.Limit).Find(&users).Error; err != nil {
 		return nil, 0, fmt.Errorf("failed to get users: %w", err)
 	}
-	
+
 	return users, total, nil
 }
 
 // GetByID returns a user by ID
 func (r *UserRepository) GetByID(ctx context.Context, id uint) (*models.User, error) {
 	var user models.User
-	
+
 	if err := r.db.WithContext(ctx).First(&user, id).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return nil, fmt.Errorf("user not found")
 		}
 		return nil, fmt.Errorf("failed to get user: %w", err)
 	}
-	
+
 	return &user, nil
 }
 
 // GetByEmail returns a user by email
 func (r *UserRepository) GetByEmail(ctx context.Context, email string) (*models.User, error) {
 	var user models.User
-	
+
 	if err := r.db.WithContext(ctx).Where("email = ?", email).First(&user).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return nil, nil // Not an error, just not found
 		}
 		return nil, fmt.Errorf("failed to get user by email: %w", err)
 	}
-	
+
 	return &user, nil
 }
 
@@ -138,10 +138,10 @@ func (r *UserRepository) BatchCreate(ctx context.Context, users []*models.User) 
 // GetActiveUsers returns only active users
 func (r *UserRepository) GetActiveUsers(ctx context.Context) ([]*models.User, error) {
 	var users []*models.User
-	
+
 	if err := r.db.WithContext(ctx).Where("is_active = ?", true).Find(&users).Error; err != nil {
 		return nil, fmt.Errorf("failed to get active users: %w", err)
 	}
-	
+
 	return users, nil
 }

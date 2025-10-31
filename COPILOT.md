@@ -1,221 +1,100 @@
 # 🧭 GitHub Copilot Guide for Go Projects
 
-**Go Version**: 1.25.3 (Latest Stable)
+**Go Version**: 1.25.3 (Latest Stable)  
+**Last Updated**: October 31, 2025
 
 ## 🎯 Tujuan
-
-Panduan untuk GitHub Copilot agar menulis, memelihara, dan mengembangkan proyek Go secara idiomatik, aman, maintainable, dan sesuai roadmap resmi Go.
-
----
-
-## 1️⃣ Fundamental Concepts
-
-Copilot harus mematuhi dasar berikut saat menulis atau merefaktor kode:
-
-- **Idiomatic Go**: gunakan pendekatan standar (`defer`, `error`, `context`, package modular).
-- **Explicit errors**: tidak boleh silent failure.
-- **Context everywhere**: semua I/O (HTTP, DB, goroutine) wajib menerima `context.Context`.
-- **Small focused funcs**: satu fungsi = satu tanggung jawab.
-- **gofmt/goimports**: selalu jaga format konsisten.
+Panduan untuk GitHub Copilot agar menulis, memelihara, dan mengembangkan proyek Go secara idiomatik, aman, maintainable, dan mengikuti roadmap Go terbaru.
 
 ---
 
-## 2️⃣ Go Learning & Development Roadmap (urut logis)
-
-| Tahap | Fokus | Catatan |
-|-------|-------|---------|
-| **1. Basics** | Setup Go env, `go run`, variabel, konstanta, tipe data, `fmt`, dokumentasi | Gunakan stdlib |
-| **2. Control Flow & Data** | Arrays, Slices, Maps, Structs, `if`, `for`, `switch` | "comma-ok idiom", `range` |
-| **3. Functions & Pointers** | Variadic, closures, named returns, pointers, GC | Hindari pointer berlebihan |
-| **4. Methods & Interfaces** | Receiver pointer/value, interface composition | Minimalist interface |
-| **5. Generics** | Gunakan hanya bila ada real benefit | Go 1.18+ |
-| **6. Errors** | `errors.New`, `fmt.Errorf("%w")`, unwrap, panic/recover (exceptional only) | Explicit handling |
-| **7. Modules & Packages** | `go mod init`, `go mod tidy`, `go doc` | Pisahkan `internal/`/`pkg/` |
-| **8. Concurrency** | Goroutine, Channels, `select`, `sync`, `context`, worker pool | "share memory by communicating" |
-| **9. Stdlib & Testing** | `io`, `os`, `time`, `log/slog`, `encoding/json`, `testing`, `httptest`, benchmarks | Table-driven tests |
-| **10. Ecosystem** | CLI (Cobra), Web (chi/gin), ORM (pgx/sqlc/gorm), logging (zerolog/slog) | Pilih lib sesuai kebijakan |
-| **11. Tooling** | `go vet`, `staticcheck`, `golangci-lint`, `govulncheck`, `pprof`, `trace` | Gunakan CI |
-| **12. Advanced Topics** | reflection, unsafe, CGO, build tags, plugins | Hanya jika benar-benar dibutuhkan |
+## 1️⃣ Fundamental
+- **Idiomatic Go** (`defer`, explicit `error`, `context`, packages).
+- **Explicit error handling**; jangan silent.
+- **Gunakan `context.Context`** di semua I/O & goroutine.
+- **Fungsi kecil & fokus**; nama jelas.
+- **Format konsisten**: `gofmt`/`goimports`.
 
 ---
 
-## 3️⃣ Library Usage & Maintenance Policy
-
-### Prinsip Utama
-
-1. **Prefer maintained library** bila fiturnya sudah tersedia & stabil.
-2. Sebelum menambahkan library baru, Copilot wajib cek:
-   - ✅ Terakhir commit/rilis **< 12 bulan**.
-   - ✅ Tidak ada label **Deprecated** di README/pkg.go.dev.
-   - ✅ Kompatibel dengan Go version di `go.mod`.
-   - ✅ CI lint/vet/vuln/test lulus.
-3. **Selalu gunakan stdlib dulu** jika memadai (jangan reinvent wheel).
-4. Setiap library baru harus dicatat alasan pemilihannya di PR.
-
----
-
-## 🧰 Curated Safe Libraries (2025)
-
-| Kategori | Rekomendasi | Catatan |
-|----------|-------------|---------|
-| **Router** | `github.com/go-chi/chi/v5` | ringan, idiomatik |
-| **Middleware** | `chi/middleware` | requestID, recoverer, timeout |
-| **Validation** | `github.com/go-playground/validator/v10` | aktif & maintain |
-| **Config** | `github.com/knadh/koanf` atau `github.com/spf13/viper` | pilih sesuai kebutuhan |
-| **Logging** | `log/slog` (Go ≥ 1.21) atau `github.com/rs/zerolog` | structured |
-| **Tracing** | `go.opentelemetry.io/otel` | OTel standard |
-| **Metrics** | `github.com/prometheus/client_golang` | industry standard |
-| **DB Driver** | `github.com/jackc/pgx/v5` | prefer native |
-| **Query Gen** | `github.com/sqlc-dev/sqlc` | type-safe |
-| **Migration** | `github.com/golang-migrate/migrate/v4` | actively maintained |
-| **Cache** | `github.com/redis/go-redis/v9` | official client |
-| **Messaging** | `github.com/nats-io/nats.go` / `github.com/segmentio/kafka-go` | pure Go |
-| **Auth** | `github.com/golang-jwt/jwt/v5` | resmi successor |
-| **Testing** | `github.com/stretchr/testify` / `go.uber.org/mock` | assert & mocks |
-| **Retry** | `github.com/cenkalti/backoff/v4` | exponential backoff |
-| **Rate Limit** | `golang.org/x/time/rate` | official extended lib |
-| **DI** | `github.com/google/wire` (compile-time) | optional |
+## 2️⃣ Roadmap (ringkas)
+1. **Basics** → variabel, tipe data, `fmt`, tools `go`.
+2. **Data & Control Flow** → arrays, slices, maps, structs, `if/for/switch`, comma-ok.
+3. **Functions & Pointers** → variadic, closures, named returns, GC aware.
+4. **Methods & Interfaces** → small interfaces, value vs pointer receiver.
+5. **Generics** → gunakan bila ada manfaat nyata.
+6. **Errors** → `%w`, `errors.Is/As`, panic/recover hanya exceptional.
+7. **Modules & Packages** → `go mod`, layout `/cmd`, `/internal`, `/pkg`.
+8. **Concurrency** → goroutine, channels, `select`, `sync`, `context`.
+9. **Stdlib & Testing** → `testing`, table-driven, `httptest`, benchmarks.
+10. **Ecosystem** → CLI, HTTP router, DB, logging/OTel.
+11. **Tooling** → `vet`, `staticcheck`, `golangci-lint`, `govulncheck`, `pprof`.
+12. **Advanced** → reflection, unsafe, CGO, build tags (only if needed).
 
 ---
 
-## 4️⃣ Project Structure
+## 3️⃣ Library Usage Policy
 
-```
-/cmd/<app>         → entrypoint
-/internal/...      → business logic (non-exported)
-/pkg/...           → reusable packages
-/api/...           → handlers / OpenAPI
-/configs/...       → config files
-/scripts/...       → tools, migrations
-```
+### ⚠️ CRITICAL: Deprecation Prevention
+**WAJIB melakukan double-check sebelum menggunakan/menambahkan library:**
+
+1. **Cek dokumentasi resmi** di pkg.go.dev
+2. **Verifikasi di GitHub**: last commit < 12 bulan
+3. **Cek deprecation notice** di README/godoc
+4. **Pastikan compatible** dengan Go 1.25.3
+5. **Jangan gunakan library deprecated** (SA1019 harus bersih)
+
+### Curated Safe Libraries (Verified 2025)
+**Router**: `github.com/gin-gonic/gin` v1.10+  
+**Validation**: `github.com/go-playground/validator/v10`  
+**Config**: `github.com/spf13/viper` v1.19+  
+**Logging**: `log/slog` (stdlib Go ≥1.21) - PREFER THIS  
+**DB Driver**: `github.com/lib/pq` (PostgreSQL)  
+**ORM**: `gorm.io/gorm` v1.25+  
+**Query Gen**: `github.com/sqlc-dev/sqlc`  
+**Migration**: `github.com/golang-migrate/migrate/v4`  
+**Auth**: `github.com/golang-jwt/jwt/v5`  
+**Testing**: `github.com/stretchr/testify`  
+**Mock**: `go.uber.org/mock`  
+**Rate Limit**: `golang.org/x/time/rate`  
+**Swagger**: `github.com/swaggo/swag`  
+**Crypto**: `golang.org/x/crypto/bcrypt`
 
 ---
 
-## 5️⃣ Copilot Coding Directives
+## 4️⃣ Copilot Directives
 
-### General Rules
-
-- ✅ Always handle errors explicitly.
-- ✅ Always use `context` for long-running or I/O operations.
-- ✅ Use `defer` for resource cleanup (file/db connections).
-- ✅ Prefer small, pure functions.
-- ✅ Never ignore return errors.
-- ✅ Avoid global mutable state.
-
-### Example Comments
-
+### WAJIB Verification Flow
 ```go
-// copilot:task
-// Goal: add GET /v1/users endpoint with chi, context-aware, structured logging
-// Constraints: use slog, handle errors, return JSON, 200/500 properly
-
 // copilot:lib-check
-// Need: rate limiter middleware.
-// Policy: prefer maintained, non-deprecated lib; check docs/pkg.go.dev
+// 1. Search pkg.go.dev for library
+// 2. Verify GitHub last commit < 12 months
+// 3. Check godoc for deprecation warnings
+// 4. Ensure Go 1.25.3 compatible
+// 5. Run staticcheck for SA1019
 ```
 
 ---
 
-## 6️⃣ Code Quality & CI
-
-### Mandatory Checks
-
-- ✅ `gofmt`, `goimports`, `golangci-lint`
-- ✅ `go vet`, `govulncheck`, `staticcheck`
-- ✅ `go test ./... -race -shuffle=on -cover`
-- ✅ Lint rule SA1019 → fail if deprecated API used
-
-### Optional Checks
-
-- `pprof`, `trace`, `bench` for optimization
-- `goreleaser` for packaging
-- Renovate/Dependabot for dependency health
-
----
-
-## 7️⃣ Testing Practices
-
-- ✅ **Table-driven tests**.
-- ✅ `t.Run` subtests.
-- ✅ `httptest` for HTTP layer.
-- ✅ `testify/assert` or native `testing`.
-- ✅ Benchmark critical code (`go test -bench=.`).
-- ✅ Use mocks/fakes for DB or external APIs.
-
----
-
-## 8️⃣ Deployment Best Practices
-
-- ✅ Multi-stage Docker build (distroless)
-- ✅ Non-root user
-- ✅ HEALTHCHECK endpoint
-- ✅ Read-only FS when possible
-- ✅ Versioned release via goreleaser
-
----
-
-## 9️⃣ Copilot Decision Flow
-
-1. **Cek**: bisa pakai stdlib?
-2. **Kalau tidak**: gunakan curated lib (lihat tabel di atas).
-3. **Kalau fitur belum ada**: riset 1–2 alternatif → pastikan maintained.
-4. **Jangan pakai** lib deprecated atau unmaintained.
-5. **Pastikan** lint/test/vuln check pass sebelum merge.
-
----
-
-## 🔐 Security Hygiene
-
-- ✅ Jangan commit secrets. Gunakan env vars atau secret manager.
-- ✅ Aktifkan `govulncheck` di CI.
-- ✅ Aktifkan Dependabot/Renovate weekly.
-- ✅ Gunakan `GOPRIVATE` untuk private modules.
-- ✅ Tambahkan SBOM via goreleaser/syft.
-
----
-
-## ✅ Definition of Done (PR)
-
-- ✅ Build clean + lint/vet/vuln pass
-- ✅ Tests & coverage OK (`-race`)
-- ✅ Context & error handling lengkap
-- ✅ No deprecated/lib unmaintained
-- ✅ Docs/README updated
-- ✅ Binary/container build pass
-
----
-
-## ⚙️ Example CI Snippet
-
-```yaml
-name: CI
-on: [push, pull_request]
-jobs:
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
-        with:
-          go-version: '1.25.3'
-      - run: go mod tidy
-      - run: golangci-lint run
-      - run: go vet ./...
-      - run: govulncheck ./...
-      - run: go test ./... -race -shuffle=on -coverprofile=coverage.out
+## 5️⃣ Quality Gates (CI)
+```bash
+golangci-lint run  # SA1019 check
+go vet ./...
+govulncheck ./...
+staticcheck ./...
+go test ./... -race -shuffle=on -cover
 ```
 
 ---
 
-## 🧠 Reminder to Copilot
-
-1. **Always align** code with the latest Go stable release (1.25.3).
-2. **Verify** every imported library is maintained, non-deprecated, and documented.
-3. **Use Go idioms** first, library second, custom code last.
-4. **Optimize** only after correctness and clarity.
+## 6️⃣ Definition of Done (PR)
+- ✅ **NO DEPRECATED CODE** (SA1019 clean)
+- ✅ **All imports verified** at pkg.go.dev
+- ✅ Build & tests pass with `-race`
+- ✅ Coverage ≥ 70%
+- ✅ Docs updated
 
 ---
 
-**Last Updated**: October 31, 2025  
-**Go Version**: 1.25.3  
-**Status**: ✅ Active & Maintained
+**Reminder**: ALWAYS verify at pkg.go.dev before importing!
+

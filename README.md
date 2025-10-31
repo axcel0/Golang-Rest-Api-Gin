@@ -1,457 +1,270 @@
-# Go Lang Project 01 - Learning Project
+# 🚀 GO Lang Project 01
 
-Project belajar Go dengan arsitektur clean dan best practices! 🚀
+Production-ready REST API built with Go 1.25.3, following best practices and clean architecture.
 
 ## ✨ Features
 
-- ✅ **Clean Architecture** - Separation of concerns dengan layers
-- ✅ **Gin Framework** - Fast HTTP router dan middleware
-- ✅ **GORM ORM** - Database operations dengan SQLite
-- ✅ **Goroutines** - Concurrent operations untuk batch & stats
-- ✅ **Middleware** - Custom logging, CORS, error handling, recovery
-- ✅ **Health Checks** - Liveness & readiness probes
-- ✅ **API Versioning** - Versioned endpoints (`/api/v1/`)
-- ✅ **Context Management** - Request timeouts & cancellation
-- ✅ **Response Helpers** - Consistent API responses
+- ✅ **Clean Architecture** - Separation of concerns with layered design
+- ✅ **Request Validation** - Using `validator/v10` with detailed error responses
+- ✅ **Pagination & Filtering** - Efficient data retrieval with search, sort, filter
+- ✅ **Configuration Management** - Viper-based config with environment override
+- ✅ **Rate Limiting** - Per-IP protection using token bucket algorithm
+- ✅ **Structured Logging** - Ready for `log/slog` integration
+- ✅ **Type-Safe SQL** - SQLC for compile-time SQL verification
+- ✅ **Database Migrations** - Version-controlled schema changes
+- ✅ **Comprehensive Testing** - Unit tests with race detection
+- ✅ **API Documentation** - Swagger/OpenAPI ready
+- ✅ **CI/CD Pipeline** - Automated quality gates
+- ✅ **Security** - JWT authentication, vulnerability scanning
+- ✅ **Docker Support** - Multi-stage production build
+- ✅ **NO DEPRECATED CODE** - SA1019 enforcement in CI
 
-## 📁 Struktur Project
+## �️ Tech Stack
+
+- **Go**: 1.25.3 (Latest Stable)
+- **Framework**: Gin v1.11.0
+- **ORM**: GORM v1.31.0
+- **Config**: Viper v1.21.0
+- **Validation**: go-playground/validator/v10
+- **Rate Limiting**: golang.org/x/time/rate
+- **Type-Safe SQL**: sqlc
+- **Migrations**: golang-migrate/migrate/v4
+- **Auth**: golang-jwt/jwt/v5
+- **Testing**: testify, httptest
+- **Docs**: swaggo/swag
+
+## 📁 Project Structure
 
 ```
-GO Lang Project 01/
-├── cmd/api/                    # Entry point aplikasi
-│   └── main.go                 # Server initialization & routing
-├── internal/                   # Private application code
-│   ├── handlers/               # HTTP handlers (controller layer)
-│   │   ├── user_handler.go    # User CRUD endpoints
-│   │   └── health_handler.go  # Health check endpoints
-│   ├── middleware/             # Custom middleware
-│   │   ├── logger.go          # Structured logging
-│   │   ├── cors.go            # Cross-origin resource sharing
-│   │   └── error_handler.go   # Error handling & recovery
-│   ├── models/                 # Data structures
-│   │   └── models.go          # User model & DTOs
-│   ├── services/               # Business logic layer
-│   │   └── user_service.go    # User business logic
-│   └── repository/             # Data access layer
-│       └── user_repository.go # Database operations
-├── pkg/                        # Public reusable code
-│   ├── database/               # Database connection
-│   │   └── database.go        # SQLite connection manager
-│   └── utils/                  # Utility functions
-│       ├── response.go        # Response helper functions
-│       └── id_generator.go    # ID generation utility
-├── bin/                        # Compiled binaries
-├── go.mod                      # Go modules
-├── go.sum                      # Dependency checksums
-├── goproject.db                # SQLite database file
-└── README.md
+.
+├── cmd/
+│   └── api/
+│       └── main.go              # Application entry point
+├── internal/
+│   ├── handlers/                # HTTP handlers
+│   ├── services/                # Business logic
+│   ├── repository/              # Data access layer
+│   │   ├── queries/             # SQLC queries
+│   │   └── sqlc/                # Generated type-safe code
+│   ├── models/                  # Domain models
+│   └── middleware/              # HTTP middleware
+├── pkg/
+│   └── utils/                   # Shared utilities
+├── configs/                     # Configuration files
+├── scripts/
+│   └── migrations/              # Database migrations
+├── .github/
+│   └── workflows/               # CI/CD pipelines
+├── Makefile                     # Build automation
+├── Dockerfile                   # Production container
+└── COPILOT.md                   # Development guidelines
 ```
 
-## 🎯 Konsep Arsitektur
+## 🚀 Quick Start
 
-**Layered Architecture (Clean Architecture):**
+### Prerequisites
 
-1. **Handlers** (Presentation Layer)
-   - Menerima HTTP requests dari client
-   - Validasi input & binding JSON
-   - Memanggil service layer
-   - Mengembalikan HTTP responses (menggunakan response helpers)
-   - Error handling untuk user-facing errors
+- Go 1.25.3+
+- Make
+- Docker (optional)
 
-2. **Services** (Business Logic Layer)
-   - Business rules & validations
-   - Orchestration logic
-   - Koordinasi antara multiple repositories
-   - Concurrent operations dengan goroutines
-   - Context management untuk timeouts
+### Installation
 
-3. **Repository** (Data Access Layer)
-   - CRUD operations dengan GORM
-   - Data persistence ke SQLite
-   - Database queries & transactions
-   - Soft delete support
-   - Context-aware database operations
-
-4. **Middleware** (Cross-Cutting Concerns)
-   - Logging: Request/response logging dengan latency tracking
-   - CORS: Cross-origin resource sharing
-   - Error Handler: Centralized error handling
-   - Recovery: Panic recovery untuk stability
-
-5. **Utils** (Helper Functions)
-   - Response helpers: Consistent API responses
-   - ID generators: Unique identifier generation
-   - Reusable utilities
-
-## 🚀 Cara Menjalankan
-
+1. **Clone the repository**
 ```bash
-# Install dependencies
+git clone <repository-url>
+cd "GO Lang Project 01"
+```
+
+2. **Install dependencies**
+```bash
 go mod download
-
-# Run the application (development)
-go run cmd/api/main.go
-
-# Build the application
-go build -o bin/server cmd/api/main.go
-
-# Run the binary (production)
-./bin/server
 ```
 
-Server akan berjalan di `http://localhost:8080`
-
-**Framework & Dependencies:**
-- Gin v1.11.0 - HTTP web framework
-- GORM v1.31.0 - ORM library
-- SQLite - Embedded database (zero configuration)
-
-## 📝 API Endpoints
-
-### Health Check Endpoints
-
-**Liveness Probe**
+3. **Install development tools**
 ```bash
-GET /health
+make install-tools
 ```
-Response:
+
+4. **Setup configuration**
+```bash
+cp .env.example .env
+# Edit .env with your settings
+```
+
+5. **Run the application**
+```bash
+make run
+```
+
+## 🧪 Development
+
+### Available Make Commands
+
+```bash
+make help           # Show all available commands
+make build          # Build the application
+make run            # Build and run
+make test           # Run tests
+make test-race      # Run tests with race detector
+make test-cover     # Generate coverage report
+make lint           # Run linters (includes SA1019)
+make vet            # Run go vet
+make vuln           # Check vulnerabilities
+make staticcheck    # Run staticcheck
+make fmt            # Format code
+make ci             # Run all CI checks
+make pre-commit     # Quick checks before commit
+```
+
+### Quality Gates
+
+Before every commit, ensure all checks pass:
+
+```bash
+make pre-commit
+```
+
+This runs:
+- ✅ Code formatting (`gofmt`)
+- ✅ Static analysis (`go vet`)
+- ✅ Linting (`golangci-lint` with SA1019)
+- ✅ Tests with race detection
+- ✅ Security scanning (`govulncheck`)
+
+## 📝 API Documentation
+
+### Endpoints
+
+#### Users
+
+```http
+GET    /api/v1/users          # List users (paginated)
+GET    /api/v1/users/:id      # Get user by ID
+POST   /api/v1/users          # Create user
+PUT    /api/v1/users/:id      # Update user
+DELETE /api/v1/users/:id      # Delete user
+```
+
+#### Query Parameters (Pagination)
+
+```
+page=1               # Page number (default: 1)
+limit=10             # Items per page (default: 10)
+sort=created_at      # Sort field
+order=desc           # Sort order (asc/desc)
+search=john          # Search in name/email
+active=true          # Filter by status
+```
+
+### Example Request
+
+```bash
+curl -X GET "http://localhost:8080/api/v1/users?page=1&limit=10&sort=name&order=asc"
+```
+
+### Example Response
+
 ```json
 {
-  "status": "OK",
-  "service": "Go-Lang-project-01"
-}
-```
-
-**Readiness Probe** (dengan database connectivity check)
-```bash
-GET /ready
-```
-Response:
-```json
-{
-  "status": "ready",
-  "database": "connected"
-}
-```
-
-### Users API (Versioned: `/api/v1/`)
-
-**Get All Users**
-```bash
-GET /api/v1/users
-```
-Response:
-```json
-{
-  "success": true,
   "data": [
     {
       "id": 1,
       "name": "John Doe",
       "email": "john@example.com",
-      "age": 25,
-      "is_active": true,
-      "created_at": "2025-10-30T10:00:00Z",
-      "updated_at": "2025-10-30T10:00:00Z"
+      "age": 30,
+      "active": true
     }
-  ]
-}
-```
-
-**Get User by ID**
-```bash
-GET /api/v1/users/{id}
-```
-
-**Create User**
-```bash
-POST /api/v1/users
-Content-Type: application/json
-
-{
-  "name": "John Doe",
-  "email": "john@example.com",
-  "age": 25
-}
-```
-Response (201 Created):
-```json
-{
-  "success": true,
-  "message": "user created successfully",
-  "data": {
-    "id": 1,
-    "name": "John Doe",
-    "email": "john@example.com",
-    "age": 25,
-    "is_active": true,
-    "created_at": "2025-10-30T10:00:00Z",
-    "updated_at": "2025-10-30T10:00:00Z"
+  ],
+  "meta": {
+    "page": 1,
+    "limit": 10,
+    "total": 100,
+    "total_pages": 10
   }
 }
 ```
 
-**Update User**
-```bash
-PUT /api/v1/users/{id}
-Content-Type: application/json
+## 🔒 Security
 
-{
-  "name": "Jane Doe",
-  "email": "jane@example.com",
-  "age": 26
-}
-```
+- **Rate Limiting**: 100 requests per minute per IP
+- **Input Validation**: All requests validated with detailed error responses
+- **SQL Injection**: Protected via GORM/SQLC parameterized queries
+- **Vulnerability Scanning**: Automated with `govulncheck`
+- **Dependency Updates**: Weekly automated PRs via Dependabot
+- **No Deprecated Code**: SA1019 check in CI prevents deprecated imports
 
-**Delete User** (Soft Delete)
-```bash
-DELETE /api/v1/users/{id}
-```
+## 🐳 Docker
 
-**Batch Create Users** 🚀 (Concurrent dengan Goroutines)
-```bash
-POST /api/v1/users/batch
-Content-Type: application/json
-
-[
-  {
-    "name": "User 1",
-    "email": "user1@example.com",
-    "age": 22
-  },
-  {
-    "name": "User 2",
-    "email": "user2@example.com",
-    "age": 23
-  }
-]
-```
-Response:
-```json
-{
-  "success": true,
-  "message": "users created successfully",
-  "data": [...]
-}
-```
-
-**Get User Statistics** 🚀 (Concurrent dengan Goroutines)
-```bash
-GET /api/v1/users/stats
-```
-Response:
-```json
-{
-  "success": true,
-  "data": {
-    "total_users": 10,
-    "active_users": 8,
-    "inactive_users": 2
-  }
-}
-```
-
-## 🧪 Testing dengan cURL
+### Build and run with Docker
 
 ```bash
-# Health checks
-curl http://localhost:8080/health
-curl http://localhost:8080/ready
-
-# Create a user
-curl -X POST http://localhost:8080/api/v1/users \
-  -H "Content-Type: application/json" \
-  -d '{"name":"John Doe","email":"john@example.com","age":25}'
-
-# Get all users
-curl http://localhost:8080/api/v1/users | jq
-
-# Get user by ID
-curl http://localhost:8080/api/v1/users/1 | jq
-
-# Update user
-curl -X PUT http://localhost:8080/api/v1/users/1 \
-  -H "Content-Type: application/json" \
-  -d '{"name":"Jane Doe","email":"jane@example.com","age":26}' | jq
-
-# Delete user (soft delete)
-curl -X DELETE http://localhost:8080/api/v1/users/1 | jq
-
-# Batch create users (concurrent with goroutines)
-curl -X POST http://localhost:8080/api/v1/users/batch \
-  -H "Content-Type: application/json" \
-  -d '[
-    {"name":"User 1","email":"user1@example.com","age":22},
-    {"name":"User 2","email":"user2@example.com","age":23},
-    {"name":"User 3","email":"user3@example.com","age":24}
-  ]' | jq
-
-# Get user statistics (concurrent with goroutines)
-curl http://localhost:8080/api/v1/users/stats | jq
+docker build -t go-api .
+docker run -p 8080:8080 go-api
 ```
 
-## 📚 Best Practices yang Dipakai
+### Production deployment
 
-### Architecture & Design Patterns
-1. ✅ **Clean Architecture**: Separation of concerns dengan layers (handlers → services → repository)
-2. ✅ **Standard Project Layout**: Mengikuti standar Go community (`cmd/`, `internal/`, `pkg/`)
-3. ✅ **Dependency Injection**: Service dan repository di-inject melalui constructors
-4. ✅ **Repository Pattern**: Abstraksi data access layer
-5. ✅ **Middleware Pattern**: Cross-cutting concerns (logging, CORS, error handling)
+The Dockerfile uses multi-stage builds with:
+- Alpine Linux (minimal size)
+- Non-root user
+- Health checks
+- Security hardening
 
-### Code Quality
-6. ✅ **Error Handling**: Proper error handling & propagation di setiap layer
-7. ✅ **Centralized Error Handling**: Middleware untuk consistent error responses
-8. ✅ **Response Helpers**: Reusable functions untuk consistent API responses
-9. ✅ **Meaningful Names**: Variable, function, dan package names yang descriptive
-10. ✅ **DRY Principle**: Don't Repeat Yourself - reusable utilities
+## 📊 Testing
 
-### Concurrency & Performance
-11. ✅ **Goroutines**: Concurrent operations untuk batch create & stats calculation
-12. ✅ **Semaphore Pattern**: Limiting concurrent goroutines (max 5)
-13. ✅ **sync.WaitGroup**: Proper goroutine synchronization
-14. ✅ **Context Management**: Request timeouts (5-30 seconds) & cancellation
-15. ✅ **Thread-Safe Operations**: Context-aware database operations
+### Run all tests
+```bash
+make test
+```
 
-### API Design
-16. ✅ **RESTful API**: REST principles dengan proper HTTP methods
-17. ✅ **API Versioning**: Versioned endpoints (`/api/v1/`) untuk backward compatibility
-18. ✅ **JSON API**: Consistent JSON request/response format
-19. ✅ **HTTP Status Codes**: Proper usage (200, 201, 400, 404, 500)
-20. ✅ **Health Checks**: Liveness & readiness probes untuk production
+### Run with race detection
+```bash
+make test-race
+```
 
-### Database & Persistence
-21. ✅ **ORM Usage**: GORM untuk type-safe database operations
-22. ✅ **Auto Migration**: Automatic schema migration
-23. ✅ **Soft Delete**: Preserve data dengan deleted_at timestamp
-24. ✅ **Database Indexing**: Email index untuk faster queries
-25. ✅ **Connection Management**: Singleton database connection
+### Generate coverage report
+```bash
+make test-cover
+open coverage.html
+```
 
-## 🎓 Konsep Go yang Dipelajari
+## 🔄 CI/CD
 
-### Fundamentals
-- ✅ **Package Organization**: Proper package structure (`cmd/`, `internal/`, `pkg/`)
-- ✅ **Struct dan Methods**: Custom types dengan behavior
-- ✅ **Interfaces**: Implicit interfaces untuk abstraction
-- ✅ **Pointer vs Values**: Kapan pakai pointer, kapan pakai value
-- ✅ **Error Handling**: Explicit error returns & handling
-- ✅ **JSON Encoding/Decoding**: Marshaling & unmarshaling dengan struct tags
+GitHub Actions workflow runs on every push/PR:
 
-### Web Development
-- ✅ **Gin Framework**: Fast HTTP router & middleware
-- ✅ **HTTP Methods**: GET, POST, PUT, DELETE
-- ✅ **Route Groups**: Organizing routes dengan versioning
-- ✅ **Middleware**: Custom middleware untuk cross-cutting concerns
-- ✅ **Request Binding**: JSON binding & validation
+1. ✅ Format check (`gofmt`)
+2. ✅ Vet analysis (`go vet`)
+3. ✅ Static analysis (`staticcheck` with SA1019)
+4. ✅ Linting (`golangci-lint`)
+5. ✅ Vulnerability scan (`govulncheck`)
+6. ✅ Tests with race detection
+7. ✅ Build verification
+8. ✅ Coverage report
 
-### Concurrency
-- ✅ **Goroutines**: Lightweight concurrent execution
-- ✅ **Channels**: Communication between goroutines (buffered channels)
-- ✅ **sync.WaitGroup**: Waiting for multiple goroutines
-- ✅ **Semaphore Pattern**: Limiting concurrent operations
-- ✅ **Context**: Timeout & cancellation untuk goroutines
+## � Documentation
 
-### Database
-- ✅ **GORM ORM**: Object-relational mapping
-- ✅ **SQLite**: Embedded database
-- ✅ **Auto Migration**: Schema management
-- ✅ **CRUD Operations**: Create, Read, Update, Delete
-- ✅ **Soft Delete**: Logical deletion dengan GORM
-- ✅ **Database Indexing**: Performance optimization
+- **COPILOT.md** - Comprehensive development guidelines
+- **API Docs** - Swagger UI (coming soon)
+- **Code Comments** - Godoc compatible
 
-### Advanced Patterns
-- ✅ **Dependency Injection**: Constructor injection
-- ✅ **Repository Pattern**: Data access abstraction
-- ✅ **Service Layer**: Business logic separation
-- ✅ **Error Wrapping**: Context-aware errors
-- ✅ **Panic Recovery**: Graceful error handling
+## 🤝 Contributing
 
-## � Tech Stack
+1. Follow guidelines in `COPILOT.md`
+2. Run `make pre-commit` before committing
+3. Ensure all CI checks pass
+4. Update documentation as needed
 
-| Technology | Version | Purpose |
-|------------|---------|---------|
-| **Go** | 1.25.3 | Programming language |
-| **Gin** | v1.11.0 | HTTP web framework |
-| **GORM** | v1.31.0 | ORM library |
-| **SQLite** | v1.6.0 | Embedded database |
+## 📄 License
 
-## �🔜 Next Steps untuk Belajar
+MIT License
 
-### Already Implemented ✅
-- ✅ Clean Architecture
-- ✅ Gin Framework
-- ✅ GORM dengan SQLite
-- ✅ Middleware (logging, CORS, error handling)
-- ✅ Goroutines (batch & stats)
-- ✅ Context management
-- ✅ Health checks
-- ✅ API versioning
+## � Author
 
-### Future Enhancements 🎯
-1. **Testing**
-   - Unit tests untuk services & repositories
-   - Integration tests
-   - Test coverage reports
-
-2. **Database**
-   - Migration dari SQLite ke PostgreSQL/MySQL
-   - Database migrations tool (golang-migrate)
-   - Connection pooling optimization
-
-3. **Authentication & Authorization**
-   - JWT authentication
-   - Middleware untuk protected routes
-   - Role-based access control (RBAC)
-
-4. **Validation & Security**
-   - Request validation library (validator)
-   - Input sanitization
-   - Rate limiting
-   - SQL injection prevention
-
-5. **Configuration**
-   - Environment variables (.env)
-   - Configuration management (viper)
-   - Multiple environments (dev, staging, prod)
-
-6. **Observability**
-   - Structured logging (logrus/zap)
-   - Metrics collection (Prometheus)
-   - Distributed tracing (OpenTelemetry)
-   - Application monitoring
-
-7. **DevOps**
-   - Docker containerization
-   - Docker Compose untuk local development
-   - CI/CD pipeline (GitHub Actions)
-   - Kubernetes deployment
-
-8. **API Documentation**
-   - Swagger/OpenAPI specification
-   - API documentation generator
-   - Postman collection
-
-## 📖 Resources
-
-### Official Documentation
-- [Go Documentation](https://go.dev/doc/)
-- [Effective Go](https://go.dev/doc/effective_go)
-- [Gin Framework](https://gin-gonic.com/docs/)
-- [GORM Documentation](https://gorm.io/docs/)
-
-### Learning Resources
-- [Go by Example](https://gobyexample.com/)
-- [Standard Go Project Layout](https://github.com/golang-standards/project-layout)
-- [Uber Go Style Guide](https://github.com/uber-go/guide/blob/master/style.md)
-- [Go Concurrency Patterns](https://go.dev/blog/pipelines)
-
-### Community
-- [Go Forum](https://forum.golangbridge.org/)
-- [Go Reddit](https://www.reddit.com/r/golang/)
-- [Gophers Slack](https://invite.slack.golangbridge.org/)
+**Axel**
 
 ---
 
-**Project Status**: 🟢 Production Ready with Best Practices
+**Built with ❤️ using Go 1.25.3**
 
-Happy coding! 🎉 Selamat belajar Go! 🚀
+
