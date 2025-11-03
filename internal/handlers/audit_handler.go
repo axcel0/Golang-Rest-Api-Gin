@@ -1,3 +1,6 @@
+// Package handlers provides HTTP request handlers for audit logging endpoints
+// with comprehensive Swagger documentation and RBAC protection for administrative
+// operations like viewing all logs, statistics, and cleanup functions.
 package handlers
 
 import (

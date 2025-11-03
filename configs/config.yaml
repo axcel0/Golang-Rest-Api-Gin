@@ -5,8 +5,8 @@ app:
   name: "Go-Lang-project-01"
   version: "1.0.0"
   environment: "development" # development, staging, production
-  ratelimitperminute: 1000 # Requests per minute per IP (increased for testing)
-  ratelimitburst: 100 # Allow burst of 100 requests (increased for testing)
+  ratelimitperminute: 1000000000 # UNLIMITED for testing - 1 billion requests/min
+  ratelimitburst: 10000 # Massive burst allowance for rapid testing
 
 server:
   port: "8080"

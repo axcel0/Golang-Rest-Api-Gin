@@ -1,3 +1,5 @@
+// Package repository provides data access layer implementations for all models
+// using GORM ORM, including CRUD operations, filtering, and query optimization.
 package repository
 
 import (

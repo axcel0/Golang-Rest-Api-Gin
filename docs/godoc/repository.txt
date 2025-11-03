@@ -1,0 +1,10 @@
+package repository // import "Go-Lang-project-01/internal/repository"
+
+Package repository provides data access layer implementations for all models
+using GORM ORM, including CRUD operations, filtering, and query optimization.
+
+type AuditLogFilter struct{ ... }
+type AuditLogRepository struct{ ... }
+    func NewAuditLogRepository(db *gorm.DB) *AuditLogRepository
+type UserRepository struct{ ... }
+    func NewUserRepository(db *gorm.DB) *UserRepository

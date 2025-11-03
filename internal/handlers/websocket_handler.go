@@ -101,20 +101,33 @@ func (h *WebSocketHandler) GetStats(c *gin.Context) {
 	// Get user from context (set by JWT middleware)
 	userID, exists := c.Get("userID")
 	if !exists {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"success": false,
+			"message": "unauthorized",
+		})
 		return
 	}
 
 	userRole, exists := c.Get("userRole")
 	if !exists || (userRole != "admin" && userRole != "superadmin") {
-		c.JSON(http.StatusForbidden, gin.H{"error": "admin access required"})
+		c.JSON(http.StatusForbidden, gin.H{
+			"success": false,
+			"message": "admin access required",
+		})
 		return
 	}
 
 	stats := h.hub.GetStats()
-	stats["user_id"] = userID
-
-	c.JSON(http.StatusOK, stats)
+	
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"message": "WebSocket statistics retrieved successfully",
+		"data": gin.H{
+			"total_connections": stats["total_connections"],
+			"active_connections": stats["active_connections"],
+			"user_id": userID,
+		},
+	})
 }
 
 // BroadcastMessage sends a test broadcast message (admin only)

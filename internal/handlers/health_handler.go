@@ -37,11 +37,15 @@ func (h *HealthHandler) HealthCheck(c *gin.Context) {
 
 	healthResp := h.healthService.CheckHealth(ctx)
 
-	statusCode := http.StatusOK
-	if healthResp.Status == health.StatusUnhealthy {
+	// Use tagged switch for cleaner status code determination
+	var statusCode int
+	switch healthResp.Status {
+	case health.StatusUnhealthy:
 		statusCode = http.StatusServiceUnavailable
-	} else if healthResp.Status == health.StatusDegraded {
+	case health.StatusDegraded:
 		statusCode = http.StatusOK // Still return 200 for degraded
+	default:
+		statusCode = http.StatusOK // Healthy or unknown status
 	}
 
 	c.JSON(statusCode, healthResp)

@@ -180,6 +180,7 @@ func getAuthToken(user *models.User) (string, error) {
 // cleanDatabase truncates all tables
 func cleanDatabase() {
 	testDB.Exec("DELETE FROM users")
+	testDB.Exec("DELETE FROM audit_logs")
 }
 
 // countUsers returns the number of users in the database
@@ -187,4 +188,23 @@ func countUsers() int64 {
 	var count int64
 	testDB.Model(&models.User{}).Count(&count)
 	return count
+}
+
+// countAuditLogs returns the number of audit logs in the database
+func countAuditLogs() int64 {
+	var count int64
+	testDB.Model(&models.AuditLog{}).Count(&count)
+	return count
+}
+
+// getUserByEmail retrieves a user by email
+func getUserByEmail(email string) (*models.User, error) {
+	var user models.User
+	result := testDB.Where("email = ?", email).First(&user)
+	return &user, result.Error
+}
+
+// deleteUser removes a user by ID
+func deleteUser(id uint) error {
+	return testDB.Delete(&models.User{}, id).Error
 }

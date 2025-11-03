@@ -1,5 +1,37 @@
 {
+  "name": "go-rest-api-websocket-tests",
+  "version": "1.0.0",
+  "description": "TypeScript WebSocket test clients for Go REST API",
+  "scripts": {
+    "test:ws": "ts-node test-websocket.ts",
+    "test:broadcast": "ts-node test-websocket-broadcast.ts",
+    "build": "tsc",
+    "lint": "eslint . --ext .ts",
+    "format": "prettier --write \"**/*.ts\""
+  },
+  "keywords": [
+    "websocket",
+    "typescript",
+    "testing"
+  ],
+  "author": "",
+  "license": "MIT",
   "dependencies": {
     "ws": "^8.18.3"
+  },
+  "devDependencies": {
+    "@types/node": "^22.8.7",
+    "@types/ws": "^8.5.13",
+    "@typescript-eslint/eslint-plugin": "^8.13.0",
+    "@typescript-eslint/parser": "^8.13.0",
+    "eslint": "^9.14.0",
+    "prettier": "^3.3.3",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.6.3"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
   }
 }
+

@@ -1,3 +1,6 @@
+// Package logger provides structured logging using Go's standard library slog
+// with support for JSON and text formats, configurable log levels, and
+// contextual logging with structured fields.
 package logger
 
 import (

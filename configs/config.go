@@ -1,3 +1,6 @@
+// Package configs provides application configuration management using Viper
+// to load settings from config files, environment variables, and defaults.
+// Supports server, database, logger, app, and JWT configuration sections.
 package configs
 
 import (
@@ -68,8 +71,9 @@ func LoadConfig() (*Config, error) {
 	// Set config file name and path
 	viper.SetConfigName("config")
 	viper.SetConfigType("yaml")
-	viper.AddConfigPath("./configs")
-	viper.AddConfigPath(".")
+	viper.AddConfigPath("./configs")      // From project root
+	viper.AddConfigPath(".")              // Current directory
+	viper.AddConfigPath("../../configs")  // From cmd/api directory
 
 	// Set default values
 	setDefaults()

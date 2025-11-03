@@ -1,3 +1,5 @@
+// Package database provides database connection management and initialization
+// using GORM ORM with SQLite driver for persistent data storage.
 package database
 
 import (

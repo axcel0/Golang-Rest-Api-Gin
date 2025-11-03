@@ -1,0 +1,21 @@
+package middleware // import "Go-Lang-project-01/internal/middleware"
+
+Package middleware provides HTTP middleware functions for the Gin web framework,
+including JWT authentication, role-based access control (RBAC), rate limiting,
+CORS handling, request logging, and error handling.
+
+func AuthMiddleware(jwtManager *auth.JWTManager) gin.HandlerFunc
+func CORS() gin.HandlerFunc
+func CheckOwnershipOrAdmin(userID uint, requestingUser *models.User) bool
+func ErrorHandler() gin.HandlerFunc
+func GlobalRateLimit(r rate.Limit, b int) gin.HandlerFunc
+func JWTAuth(jwtManager *auth.JWTManager, userRepo *repository.UserRepository) gin.HandlerFunc
+func Logger() gin.HandlerFunc
+func OptionalAuthMiddleware(jwtManager *auth.JWTManager) gin.HandlerFunc
+func Recovery() gin.HandlerFunc
+func RequireAdmin() gin.HandlerFunc
+func RequireRole(allowedRoles ...models.Role) gin.HandlerFunc
+func RequireSuperAdmin() gin.HandlerFunc
+func RequireUser() gin.HandlerFunc
+type RateLimiter struct{ ... }
+    func NewRateLimiter(r rate.Limit, b int) *RateLimiter

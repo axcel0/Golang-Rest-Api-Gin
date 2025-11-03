@@ -1,3 +1,5 @@
+// Package auth provides password hashing utilities using bcrypt algorithm
+// for secure password storage and verification.
 package auth
 
 import (

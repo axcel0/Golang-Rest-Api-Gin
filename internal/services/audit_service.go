@@ -1,3 +1,6 @@
+// Package services provides audit logging business logic with asynchronous
+// event tracking, IP address extraction, and comprehensive action logging
+// for security and compliance monitoring.
 package services
 
 import (

@@ -1,0 +1,17 @@
+package handlers // import "Go-Lang-project-01/internal/handlers"
+
+Package handlers provides HTTP request handlers for audit logging endpoints
+with comprehensive Swagger documentation and RBAC protection for administrative
+operations like viewing all logs, statistics, and cleanup functions.
+
+func ParseUserID(idStr string) (uint, error)
+type AuditHandler struct{ ... }
+    func NewAuditHandler(service *services.AuditService) *AuditHandler
+type AuthHandler struct{ ... }
+    func NewAuthHandler(userRepo *repository.UserRepository, jwtManager *auth.JWTManager, ...) *AuthHandler
+type HealthHandler struct{ ... }
+    func NewHealthHandler(healthService *health.HealthService) *HealthHandler
+type UserHandler struct{ ... }
+    func NewUserHandler(service *services.UserService) *UserHandler
+type WebSocketHandler struct{ ... }
+    func NewWebSocketHandler(hub *ws.Hub, jwtManager *auth.JWTManager) *WebSocketHandler

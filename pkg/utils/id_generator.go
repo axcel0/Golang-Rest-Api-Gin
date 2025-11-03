@@ -1,3 +1,5 @@
+// Package utils provides common utility functions including ID generation,
+// response helpers, and validation utilities for the application.
 package utils
 
 import (

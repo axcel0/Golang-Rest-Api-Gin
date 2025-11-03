@@ -1,0 +1,10 @@
+package services // import "Go-Lang-project-01/internal/services"
+
+Package services provides audit logging business logic with asynchronous event
+tracking, IP address extraction, and comprehensive action logging for security
+and compliance monitoring.
+
+type AuditService struct{ ... }
+    func NewAuditService(repo *repository.AuditLogRepository) *AuditService
+type UserService struct{ ... }
+    func NewUserService(repo *repository.UserRepository) *UserService

@@ -1,3 +1,6 @@
+// Package websocket provides WebSocket connection management and constants
+// for real-time bidirectional communication between clients and server,
+// including message types and close codes from gorilla/websocket library.
 package websocket
 
 import (

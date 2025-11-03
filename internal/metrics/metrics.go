@@ -1,3 +1,6 @@
+// Package metrics provides Prometheus metrics collection for monitoring
+// HTTP requests, response times, request/response sizes, active connections,
+// and custom business metrics with Gin middleware integration.
 package metrics
 
 import (

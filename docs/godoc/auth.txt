@@ -1,0 +1,14 @@
+package auth // import "Go-Lang-project-01/internal/auth"
+
+Package auth provides authentication and authorization utilities including JWT
+token management, password hashing, and token validation.
+
+Package auth provides password hashing utilities using bcrypt algorithm for
+secure password storage and verification.
+
+var ErrInvalidToken = errors.New("invalid token") ...
+func CheckPassword(password, hashedPassword string) error
+func HashPassword(password string) (string, error)
+type JWTClaims struct{ ... }
+type JWTManager struct{ ... }
+    func NewJWTManager(secretKey string, accessDuration, refreshDuration time.Duration) *JWTManager
