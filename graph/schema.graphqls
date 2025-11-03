@@ -1,0 +1,94 @@
+# GraphQL Schema for User Management API
+# Compatible with existing REST API endpoints
+
+scalar Time
+
+enum Role {
+  USER
+  ADMIN
+  SUPERADMIN
+}
+
+type User {
+  id: ID!
+  name: String!
+  email: String!
+  role: Role!
+  createdAt: Time!
+  updatedAt: Time!
+}
+
+type UserStats {
+  totalUsers: Int!
+  usersByRole: [RoleCount!]!
+  recentUsers: [User!]!
+}
+
+type RoleCount {
+  role: Role!
+  count: Int!
+}
+
+type AuthPayload {
+  accessToken: String!
+  refreshToken: String!
+  user: User!
+}
+
+type Query {
+  # Get all users (requires authentication)
+  users(limit: Int, offset: Int): [User!]!
+  
+  # Get user by ID (requires authentication)
+  user(id: ID!): User
+  
+  # Get current authenticated user
+  me: User!
+  
+  # Get user statistics (requires authentication)
+  userStats: UserStats!
+}
+
+input RegisterInput {
+  name: String!
+  email: String!
+  password: String!
+}
+
+input LoginInput {
+  email: String!
+  password: String!
+}
+
+input UpdateUserInput {
+  name: String
+  email: String
+}
+
+input CreateUserInput {
+  name: String!
+  email: String!
+  password: String!
+  role: Role
+}
+
+input UpdateUserRoleInput {
+  role: Role!
+}
+
+type Mutation {
+  # Authentication (public)
+  register(input: RegisterInput!): AuthPayload!
+  login(input: LoginInput!): AuthPayload!
+  
+  # User management (requires authentication)
+  updateMe(input: UpdateUserInput!): User!
+  
+  # Admin operations (requires admin role)
+  createUser(input: CreateUserInput!): User!
+  updateUser(id: ID!, input: UpdateUserInput!): User!
+  deleteUser(id: ID!): Boolean!
+  
+  # Superadmin operations (requires superadmin role)
+  updateUserRole(id: ID!, input: UpdateUserRoleInput!): User!
+}

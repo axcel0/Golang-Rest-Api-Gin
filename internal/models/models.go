@@ -27,16 +27,19 @@ func (r Role) String() string {
 
 // User represents a user in the system
 type User struct {
-	ID        uint           `gorm:"primaryKey" json:"id"`
-	Name      string         `gorm:"not null" json:"name"`
-	Email     string         `gorm:"uniqueIndex;not null" json:"email"`
-	Password  string         `gorm:"default:''" json:"-"` // Password is optional for migration, never exposed in JSON
-	Age       int            `gorm:"not null" json:"age"`
-	Role      string         `gorm:"type:varchar(20);default:'user';not null" json:"role"` // Role: superadmin, admin, user
-	IsActive  bool           `gorm:"default:true" json:"is_active"`
-	CreatedAt time.Time      `json:"created_at"`
-	UpdatedAt time.Time      `json:"updated_at"`
-	DeletedAt gorm.DeletedAt `gorm:"index" json:"-"`
+	ID          uint           `gorm:"primaryKey" json:"id"`
+	Name        string         `gorm:"not null" json:"name"`
+	Email       string         `gorm:"uniqueIndex;not null" json:"email"`
+	Password    string         `gorm:"default:''" json:"-"` // Password is optional for migration, never exposed in JSON
+	Age         int            `gorm:"not null" json:"age"`
+	Role        string         `gorm:"type:varchar(20);default:'user';not null" json:"role"` // Role: superadmin, admin, user
+	IsActive    bool           `gorm:"default:true" json:"is_active"`
+	AvatarURL   string         `gorm:"type:varchar(255)" json:"avatar_url,omitempty"`   // Profile avatar URL
+	Bio         string         `gorm:"type:text" json:"bio,omitempty"`                  // User biography
+	PhoneNumber string         `gorm:"type:varchar(20)" json:"phone_number,omitempty"`  // Contact phone number
+	CreatedAt   time.Time      `json:"created_at"`
+	UpdatedAt   time.Time      `json:"updated_at"`
+	DeletedAt   gorm.DeletedAt `gorm:"index" json:"-"`
 }
 
 // HasRole checks if user has specific role
@@ -177,3 +180,17 @@ type RefreshTokenResponse struct {
 	ExpiresIn   int64  `json:"expires_in"` // seconds
 }
 
+// UpdateProfileRequest represents the request body for updating own profile
+type UpdateProfileRequest struct {
+	Name        *string `json:"name,omitempty" binding:"omitempty,min=2,max=100" example:"John Doe"`
+	Age         *int    `json:"age,omitempty" binding:"omitempty,min=1,max=150" example:"26"`
+	AvatarURL   *string `json:"avatar_url,omitempty" binding:"omitempty,url" example:"https://example.com/avatar.jpg"`
+	Bio         *string `json:"bio,omitempty" binding:"omitempty,max=500" example:"Software developer"`
+	PhoneNumber *string `json:"phone_number,omitempty" binding:"omitempty,min=10,max=20" example:"+628123456789"`
+}
+
+// ChangePasswordRequest represents the request body for changing password
+type ChangePasswordRequest struct {
+	CurrentPassword string `json:"current_password" binding:"required,min=6" example:"oldpassword123"`
+	NewPassword     string `json:"new_password" binding:"required,min=6,max=100" example:"newpassword123"`
+}

@@ -1,3 +1,5 @@
+// Package auth provides authentication and authorization utilities including
+// JWT token management, password hashing, and token validation.
 package auth
 
 import (
@@ -7,26 +9,35 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
+// Common JWT-related errors returned by the JWT manager.
 var (
+	// ErrInvalidToken is returned when a token cannot be parsed or validated.
 	ErrInvalidToken = errors.New("invalid token")
+	// ErrExpiredToken is returned when a token's expiration time has passed.
 	ErrExpiredToken = errors.New("token has expired")
 )
 
-// JWTClaims represents the JWT claims
+// JWTClaims represents the custom claims embedded in JWT tokens.
+// It extends the standard JWT registered claims with user-specific information.
 type JWTClaims struct {
-	UserID uint   `json:"user_id"`
-	Email  string `json:"email"`
+	UserID uint   `json:"user_id"` // User's unique identifier
+	Email  string `json:"email"`   // User's email address
+	Role   string `json:"role"`    // User's role for RBAC (user, admin, superadmin)
 	jwt.RegisteredClaims
 }
 
-// JWTManager manages JWT token operations
+// JWTManager manages JWT token operations including generation and validation.
+// It handles both access tokens (short-lived) and refresh tokens (long-lived).
 type JWTManager struct {
-	secretKey            string
-	accessTokenDuration  time.Duration
-	refreshTokenDuration time.Duration
+	secretKey            string        // Secret key for signing tokens
+	accessTokenDuration  time.Duration // Lifetime of access tokens
+	refreshTokenDuration time.Duration // Lifetime of refresh tokens
 }
 
-// NewJWTManager creates a new JWT manager
+// NewJWTManager creates a new JWT manager with the specified configuration.
+// The secret key should be a strong, randomly generated string.
+// Access tokens are typically short-lived (minutes to hours).
+// Refresh tokens are long-lived (days to weeks).
 func NewJWTManager(secretKey string, accessDuration, refreshDuration time.Duration) *JWTManager {
 	return &JWTManager{
 		secretKey:            secretKey,
@@ -35,11 +46,14 @@ func NewJWTManager(secretKey string, accessDuration, refreshDuration time.Durati
 	}
 }
 
-// GenerateAccessToken generates a new access token
-func (m *JWTManager) GenerateAccessToken(userID uint, email string) (string, error) {
+// GenerateAccessToken generates a new JWT access token for the given user.
+// Access tokens are short-lived and used for API authentication.
+// Returns the signed token string or an error if generation fails.
+func (m *JWTManager) GenerateAccessToken(userID uint, email, role string) (string, error) {
 	claims := JWTClaims{
 		UserID: userID,
 		Email:  email,
+		Role:   role,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(m.accessTokenDuration)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
@@ -52,10 +66,11 @@ func (m *JWTManager) GenerateAccessToken(userID uint, email string) (string, err
 }
 
 // GenerateRefreshToken generates a new refresh token
-func (m *JWTManager) GenerateRefreshToken(userID uint, email string) (string, error) {
+func (m *JWTManager) GenerateRefreshToken(userID uint, email, role string) (string, error) {
 	claims := JWTClaims{
 		UserID: userID,
 		Email:  email,
+		Role:   role,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(m.refreshTokenDuration)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
@@ -106,5 +121,5 @@ func (m *JWTManager) RefreshAccessToken(refreshToken string) (string, error) {
 	}
 
 	// Generate new access token with same user info
-	return m.GenerateAccessToken(claims.UserID, claims.Email)
+	return m.GenerateAccessToken(claims.UserID, claims.Email, claims.Role)
 }

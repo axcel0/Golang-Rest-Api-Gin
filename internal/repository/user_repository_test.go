@@ -259,11 +259,11 @@ func TestUserRepository_GetAllPaginated(t *testing.T) {
 	}
 
 	tests := []struct {
-		name       string
-		query      models.PaginationQuery
-		wantCount  int
-		wantTotal  int64
-		wantErr    bool
+		name      string
+		query     models.PaginationQuery
+		wantCount int
+		wantTotal int64
+		wantErr   bool
 	}{
 		{
 			name: "first_page",
@@ -401,7 +401,7 @@ func TestUserRepository_BatchCreate(t *testing.T) {
 	err := repo.BatchCreate(ctx, users)
 
 	assert.NoError(t, err)
-	
+
 	// Verify all users were created
 	for _, u := range users {
 		assert.NotZero(t, u.ID)
@@ -436,7 +436,7 @@ func TestUserRepository_GetActiveUsers(t *testing.T) {
 	assert.NoError(t, err)
 	// Should only return users with is_active = true
 	assert.GreaterOrEqual(t, len(activeUsers), 3, "Should have at least 3 active users")
-	
+
 	// Verify all returned users are active
 	for _, u := range activeUsers {
 		assert.True(t, u.IsActive, "User %s should be active", u.Email)
@@ -461,7 +461,7 @@ func TestUserRepository_ContextCancellation(t *testing.T) {
 	}
 
 	err := repo.Create(ctx, user)
-	
+
 	// SQLite might not respect context cancellation immediately
 	// but we test that the context is being used
 	if err != nil {
@@ -471,7 +471,7 @@ func TestUserRepository_ContextCancellation(t *testing.T) {
 
 func TestUserRepository_ConcurrentOperations(t *testing.T) {
 	t.Skip("Skipping concurrent test - in-memory SQLite has limitations with concurrent writes from goroutines")
-	
+
 	db := setupTestDB(t)
 	repo := NewUserRepository(db)
 	ctx := context.Background()
@@ -483,7 +483,7 @@ func TestUserRepository_ConcurrentOperations(t *testing.T) {
 	for i := 0; i < 10; i++ {
 		go func(index int) {
 			defer func() { done <- true }()
-			
+
 			email := "concurrent" + string(rune('0'+index)) + "@example.com"
 			user := &models.User{
 				Name:     "Concurrent User",
@@ -594,7 +594,7 @@ func TestUserRepository_EdgeCases(t *testing.T) {
 	t.Run("large_batch_create", func(t *testing.T) {
 		largeDB := setupTestDB(t)
 		largeRepo := NewUserRepository(largeDB)
-		
+
 		// Create 250 users (test batch size handling)
 		largeUsers := make([]*models.User, 250)
 		for i := 0; i < 250; i++ {
@@ -606,7 +606,7 @@ func TestUserRepository_EdgeCases(t *testing.T) {
 			} else {
 				email = "largebatch" + string(rune('0'+(i/100))) + string(rune('0'+((i/10)%10))) + string(rune('0'+(i%10))) + "@example.com"
 			}
-			
+
 			largeUsers[i] = &models.User{
 				Name:     "Large Batch User",
 				Email:    email,

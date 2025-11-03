@@ -8,6 +8,7 @@ import (
 	"Go-Lang-project-01/internal/auth"
 	"Go-Lang-project-01/internal/models"
 	"Go-Lang-project-01/internal/repository"
+	"Go-Lang-project-01/internal/services"
 	"Go-Lang-project-01/pkg/logger"
 	"Go-Lang-project-01/pkg/utils"
 
@@ -16,15 +17,17 @@ import (
 
 // AuthHandler handles authentication-related requests
 type AuthHandler struct {
-	userRepo   *repository.UserRepository
-	jwtManager *auth.JWTManager
+	userRepo     *repository.UserRepository
+	jwtManager   *auth.JWTManager
+	auditService *services.AuditService
 }
 
 // NewAuthHandler creates a new auth handler
-func NewAuthHandler(userRepo *repository.UserRepository, jwtManager *auth.JWTManager) *AuthHandler {
+func NewAuthHandler(userRepo *repository.UserRepository, jwtManager *auth.JWTManager, auditService *services.AuditService) *AuthHandler {
 	return &AuthHandler{
-		userRepo:   userRepo,
-		jwtManager: jwtManager,
+		userRepo:     userRepo,
+		jwtManager:   jwtManager,
+		auditService: auditService,
 	}
 }
 
@@ -94,7 +97,7 @@ func (h *AuthHandler) Register(c *gin.Context) {
 	}
 
 	// Generate tokens
-	accessToken, err := h.jwtManager.GenerateAccessToken(user.ID, user.Email)
+	accessToken, err := h.jwtManager.GenerateAccessToken(user.ID, user.Email, user.Role)
 	if err != nil {
 		logger.Error("Failed to generate access token", "error", err)
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -104,7 +107,7 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		return
 	}
 
-	refreshToken, err := h.jwtManager.GenerateRefreshToken(user.ID, user.Email)
+	refreshToken, err := h.jwtManager.GenerateRefreshToken(user.ID, user.Email, user.Role)
 	if err != nil {
 		logger.Error("Failed to generate refresh token", "error", err)
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -115,6 +118,9 @@ func (h *AuthHandler) Register(c *gin.Context) {
 	}
 
 	logger.Info("User registered successfully", "user_id", user.ID, "email", user.Email)
+
+	// Log audit trail
+	h.auditService.LogAuthAction(c, &user.ID, models.AuditActionRegister, true, "")
 
 	// Return response
 	c.JSON(http.StatusCreated, gin.H{
@@ -156,8 +162,10 @@ func (h *AuthHandler) Login(c *gin.Context) {
 
 	// Find user by email
 	user, err := h.userRepo.GetByEmail(ctx, req.Email)
-	if err != nil {
+	if err != nil || user == nil {
 		logger.Warn("Login failed: user not found", "email", req.Email)
+		// Log failed login attempt
+		h.auditService.LogAuthAction(c, nil, models.AuditActionLoginFailed, false, "User not found")
 		c.JSON(http.StatusUnauthorized, gin.H{
 			"success": false,
 			"message": "invalid email or password",
@@ -168,6 +176,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	// Check if user is active
 	if !user.IsActive {
 		logger.Warn("Login failed: user inactive", "email", req.Email)
+		h.auditService.LogAuthAction(c, &user.ID, models.AuditActionLoginFailed, false, "Account inactive")
 		c.JSON(http.StatusUnauthorized, gin.H{
 			"success": false,
 			"message": "account is inactive",
@@ -178,6 +187,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	// Verify password
 	if err := auth.CheckPassword(req.Password, user.Password); err != nil {
 		logger.Warn("Login failed: invalid password", "email", req.Email)
+		h.auditService.LogAuthAction(c, &user.ID, models.AuditActionLoginFailed, false, "Invalid password")
 		c.JSON(http.StatusUnauthorized, gin.H{
 			"success": false,
 			"message": "invalid email or password",
@@ -186,7 +196,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	}
 
 	// Generate tokens
-	accessToken, err := h.jwtManager.GenerateAccessToken(user.ID, user.Email)
+	accessToken, err := h.jwtManager.GenerateAccessToken(user.ID, user.Email, user.Role)
 	if err != nil {
 		logger.Error("Failed to generate access token", "error", err)
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -196,7 +206,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		return
 	}
 
-	refreshToken, err := h.jwtManager.GenerateRefreshToken(user.ID, user.Email)
+	refreshToken, err := h.jwtManager.GenerateRefreshToken(user.ID, user.Email, user.Role)
 	if err != nil {
 		logger.Error("Failed to generate refresh token", "error", err)
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -207,6 +217,9 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	}
 
 	logger.Info("User logged in successfully", "user_id", user.ID, "email", user.Email)
+	
+	// Log successful login
+	h.auditService.LogAuthAction(c, &user.ID, models.AuditActionLogin, true, "")
 
 	// Return response
 	c.JSON(http.StatusOK, gin.H{
@@ -252,8 +265,16 @@ func (h *AuthHandler) RefreshToken(c *gin.Context) {
 		})
 		return
 	}
+	
+	// Validate refresh token to get claims for audit logging
+	claims, _ := h.jwtManager.ValidateToken(req.RefreshToken)
 
 	logger.Info("Access token refreshed successfully")
+	
+	// Log token refresh
+	if claims != nil {
+		h.auditService.LogAuthAction(c, &claims.UserID, models.AuditActionRefreshToken, true, "")
+	}
 
 	// Return new access token
 	c.JSON(http.StatusOK, gin.H{

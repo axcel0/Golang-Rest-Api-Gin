@@ -254,3 +254,60 @@ func (s *UserService) UpdateUserRole(ctx context.Context, userID uint, newRole s
 
 	return user, nil
 }
+
+// UpdateProfile updates user's own profile (excluding role and password)
+func (s *UserService) UpdateProfile(ctx context.Context, userID uint, req *models.UpdateProfileRequest) (*models.User, error) {
+	// Get user
+	user, err := s.repo.GetByID(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Update fields if provided
+	if req.Name != nil {
+		user.Name = *req.Name
+	}
+	if req.Age != nil {
+		user.Age = *req.Age
+	}
+	if req.AvatarURL != nil {
+		user.AvatarURL = *req.AvatarURL
+	}
+	if req.Bio != nil {
+		user.Bio = *req.Bio
+	}
+	if req.PhoneNumber != nil {
+		user.PhoneNumber = *req.PhoneNumber
+	}
+
+	// Save updates
+	if err := s.repo.Update(ctx, user); err != nil {
+		return nil, err
+	}
+
+	return user, nil
+}
+
+// ChangePassword changes user's password
+func (s *UserService) ChangePassword(ctx context.Context, userID uint, currentPassword, newPassword string) error {
+	// Get user
+	user, err := s.repo.GetByID(ctx, userID)
+	if err != nil {
+		return err
+	}
+
+	// Note: Password verification should be done at handler level with auth.CheckPassword
+	// This service assumes password has already been verified
+	
+	// Hash new password
+	// Note: Hashing should be done at handler level with auth.HashPassword
+	// This service receives already-hashed password
+	user.Password = newPassword
+
+	// Save updates
+	if err := s.repo.Update(ctx, user); err != nil {
+		return err
+	}
+
+	return nil
+}

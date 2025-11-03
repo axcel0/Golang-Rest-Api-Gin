@@ -674,7 +674,7 @@ func TestUpdateUser(t *testing.T) {
 			mockSetup: func(m *MockUserRepository) {
 				existingUser := &models.User{ID: 1, Email: "user@test.com"}
 				m.On("GetByID", mock.Anything, uint(1)).Return(existingUser, nil)
-				
+
 				// Email already exists for another user
 				otherUser := &models.User{ID: 2, Email: "taken@test.com"}
 				m.On("GetByEmail", mock.Anything, "taken@test.com").Return(otherUser, nil)

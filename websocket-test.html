@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebSocket Test Client</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        h1 {
+            color: #333;
+            margin-top: 0;
+        }
+        h2 {
+            color: #666;
+            font-size: 18px;
+            margin-top: 0;
+        }
+        input, button {
+            padding: 10px;
+            margin: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            cursor: pointer;
+            border: none;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        #messages {
+            border: 1px solid #ddd;
+            padding: 10px;
+            height: 400px;
+            overflow-y: auto;
+            background: #fafafa;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 14px;
+        }
+        .message {
+            margin: 5px 0;
+            padding: 8px;
+            border-left: 3px solid #007bff;
+            background: white;
+        }
+        .message.error {
+            border-left-color: #dc3545;
+            background: #fff5f5;
+        }
+        .message.success {
+            border-left-color: #28a745;
+            background: #f5fff5;
+        }
+        .message.info {
+            border-left-color: #17a2b8;
+            background: #f5fcff;
+        }
+        .status {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        .status.connected {
+            background: #d4edda;
+            color: #155724;
+        }
+        .status.disconnected {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .timestamp {
+            color: #999;
+            font-size: 12px;
+        }
+        .event-type {
+            color: #007bff;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>🚀 WebSocket Real-time Updates Test</h1>
+    
+    <div class="container">
+        <h2>Connection</h2>
+        <div>
+            <input type="text" id="token" placeholder="JWT Token" style="width: 600px;">
+            <button id="connect" onclick="connect()">Connect</button>
+            <button id="disconnect" onclick="disconnect()" disabled>Disconnect</button>
+        </div>
+        <div style="margin-top: 10px;">
+            Status: <span id="status" class="status disconnected">DISCONNECTED</span>
+        </div>
+        <div style="margin-top: 10px; font-size: 12px; color: #666;">
+            <strong>How to get token:</strong> 
+            <code>curl -X POST http://localhost:8080/api/v1/auth/login -H "Content-Type: application/json" -d '{"email":"graphql@example.com","password":"test123"}' | jq -r '.data.access_token'</code>
+        </div>
+    </div>
+
+    <div class="container">
+        <h2>Real-time Messages</h2>
+        <button onclick="clearMessages()">Clear Messages</button>
+        <div id="messages"></div>
+    </div>
+
+    <script>
+        let ws = null;
+        let messageCount = 0;
+
+        function connect() {
+            const token = document.getElementById('token').value;
+            if (!token) {
+                addMessage('ERROR: Please enter JWT token', 'error');
+                return;
+            }
+
+            const wsUrl = `ws://localhost:8080/ws?token=${token}`;
+            addMessage(`Connecting to ${wsUrl}...`, 'info');
+
+            try {
+                ws = new WebSocket(wsUrl);
+
+                ws.onopen = function() {
+                    addMessage('✅ WebSocket connected!', 'success');
+                    updateStatus(true);
+                };
+
+                ws.onmessage = function(event) {
+                    try {
+                        const data = JSON.parse(event.data);
+                        messageCount++;
+                        
+                        let messageHtml = `
+                            <div class="message">
+                                <div class="timestamp">[${new Date(data.timestamp).toLocaleTimeString()}] Message #${messageCount}</div>
+                                <div><span class="event-type">${data.type}</span></div>
+                                <div><pre>${JSON.stringify(data.data, null, 2)}</pre></div>
+                            </div>
+                        `;
+                        
+                        const messagesDiv = document.getElementById('messages');
+                        messagesDiv.innerHTML = messageHtml + messagesDiv.innerHTML;
+                    } catch (err) {
+                        addMessage('Failed to parse message: ' + event.data, 'error');
+                    }
+                };
+
+                ws.onerror = function(error) {
+                    addMessage('❌ WebSocket error: ' + error, 'error');
+                };
+
+                ws.onclose = function() {
+                    addMessage('🔌 WebSocket disconnected', 'info');
+                    updateStatus(false);
+                };
+            } catch (err) {
+                addMessage('Connection failed: ' + err.message, 'error');
+            }
+        }
+
+        function disconnect() {
+            if (ws) {
+                ws.close();
+                ws = null;
+            }
+        }
+
+        function updateStatus(connected) {
+            const statusEl = document.getElementById('status');
+            const connectBtn = document.getElementById('connect');
+            const disconnectBtn = document.getElementById('disconnect');
+
+            if (connected) {
+                statusEl.textContent = 'CONNECTED';
+                statusEl.className = 'status connected';
+                connectBtn.disabled = true;
+                disconnectBtn.disabled = false;
+            } else {
+                statusEl.textContent = 'DISCONNECTED';
+                statusEl.className = 'status disconnected';
+                connectBtn.disabled = false;
+                disconnectBtn.disabled = true;
+            }
+        }
+
+        function addMessage(text, type = 'info') {
+            const messagesDiv = document.getElementById('messages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${type}`;
+            messageDiv.innerHTML = `<div class="timestamp">[${new Date().toLocaleTimeString()}]</div><div>${text}</div>`;
+            messagesDiv.insertBefore(messageDiv, messagesDiv.firstChild);
+        }
+
+        function clearMessages() {
+            document.getElementById('messages').innerHTML = '';
+            messageCount = 0;
+        }
+    </script>
+</body>
+</html>

@@ -1,6 +1,5 @@
 package main
 
-
 import (
 	"fmt"
 	"log"
@@ -12,7 +11,7 @@ import (
 
 // User model matching the database schema
 type User struct {
-	ID       uint   `gorm:"primarykey"`
+	ID       uint `gorm:"primarykey"`
 	Name     string
 	Email    string `gorm:"unique"`
 	Password string

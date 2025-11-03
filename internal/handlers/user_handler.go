@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"time"
 
+	"Go-Lang-project-01/internal/auth"
 	"Go-Lang-project-01/internal/models"
 	"Go-Lang-project-01/internal/services"
 	"Go-Lang-project-01/pkg/utils"
@@ -268,23 +269,47 @@ func (h *UserHandler) GetUserStats(c *gin.Context) {
 // @Failure      500      {object}  map[string]interface{}     "Internal server error"
 // @Router       /users/{id}/role [put]
 func (h *UserHandler) UpdateUserRole(c *gin.Context) {
-	// Get requesting user from context
-	requestingUserInterface, exists := c.Get("user")
+	var requestingUserID uint
+	
+	// Get requesting user role from context
+	userRoleInterface, exists := c.Get("user_role")
 	if !exists {
-		utils.ErrorResponse(c, http.StatusUnauthorized, "unauthorized")
-		return
-	}
+		// Fallback: try to get from user object
+		requestingUserInterface, userExists := c.Get("user")
+		if !userExists {
+			utils.ErrorResponse(c, http.StatusUnauthorized, "unauthorized")
+			return
+		}
 
-	requestingUser, ok := requestingUserInterface.(*models.User)
-	if !ok {
-		utils.ErrorResponse(c, http.StatusInternalServerError, "invalid user type")
-		return
-	}
+		requestingUser, ok := requestingUserInterface.(*models.User)
+		if !ok {
+			utils.ErrorResponse(c, http.StatusInternalServerError, "invalid user type")
+			return
+		}
 
-	// Only superadmin can change roles
-	if !requestingUser.IsSuperAdmin() {
-		utils.ErrorResponse(c, http.StatusForbidden, "only superadmin can change user roles")
-		return
+		// Only superadmin can change roles
+		if !requestingUser.IsSuperAdmin() {
+			utils.ErrorResponse(c, http.StatusForbidden, "only superadmin can change user roles")
+			return
+		}
+		requestingUserID = requestingUser.ID
+	} else {
+		// Check role from string
+		userRole, ok := userRoleInterface.(string)
+		if !ok {
+			utils.ErrorResponse(c, http.StatusInternalServerError, "invalid role type")
+			return
+		}
+
+		// Only superadmin can change roles
+		if models.Role(userRole) != models.RoleSuperAdmin {
+			utils.ErrorResponse(c, http.StatusForbidden, "only superadmin can change user roles")
+			return
+		}
+		
+		// Get user ID from context
+		userIDInterface, _ := c.Get("user_id")
+		requestingUserID = userIDInterface.(uint)
 	}
 
 	// Get user ID from URL
@@ -312,7 +337,7 @@ func (h *UserHandler) UpdateUserRole(c *gin.Context) {
 	}
 
 	// Prevent superadmin from demoting themselves
-	if user.ID == requestingUser.ID && req.Role != string(models.RoleSuperAdmin) {
+	if user.ID == requestingUserID && req.Role != string(models.RoleSuperAdmin) {
 		utils.ErrorResponse(c, http.StatusBadRequest, "cannot demote yourself")
 		return
 	}
@@ -327,5 +352,149 @@ func (h *UserHandler) UpdateUserRole(c *gin.Context) {
 	utils.SuccessResponse(c, gin.H{
 		"message": "user role updated successfully",
 		"user":    updatedUser,
+	})
+}
+
+// GetMe godoc
+// @Summary      Get own profile
+// @Description  Get authenticated user's profile
+// @Tags         profile
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Success      200  {object}  map[string]interface{}  "User profile"
+// @Failure      401  {object}  map[string]interface{}  "Unauthorized"
+// @Failure      404  {object}  map[string]interface{}  "User not found"
+// @Router       /users/me [get]
+func (h *UserHandler) GetMe(c *gin.Context) {
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 5*time.Second)
+	defer cancel()
+
+	// Get user ID from context (set by AuthMiddleware)
+	userIDInterface, exists := c.Get("user_id")
+	if !exists {
+		utils.ErrorResponse(c, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+
+	userID := userIDInterface.(uint)
+
+	// Get user
+	user, err := h.service.GetUserByID(ctx, userID)
+	if err != nil {
+		utils.ErrorResponse(c, http.StatusNotFound, "user not found")
+		return
+	}
+
+	utils.SuccessResponse(c, user)
+}
+
+// UpdateMe godoc
+// @Summary      Update own profile
+// @Description  Update authenticated user's profile (name, age, avatar, bio, phone)
+// @Tags         profile
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        request  body      models.UpdateProfileRequest  true  "Profile update request"
+// @Success      200      {object}  map[string]interface{}       "Profile updated successfully"
+// @Failure      400      {object}  map[string]interface{}       "Invalid request"
+// @Failure      401      {object}  map[string]interface{}       "Unauthorized"
+// @Failure      500      {object}  map[string]interface{}       "Internal server error"
+// @Router       /users/me [put]
+func (h *UserHandler) UpdateMe(c *gin.Context) {
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 5*time.Second)
+	defer cancel()
+
+	// Get user ID from context
+	userIDInterface, exists := c.Get("user_id")
+	if !exists {
+		utils.ErrorResponse(c, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+
+	userID := userIDInterface.(uint)
+
+	// Bind and validate request
+	var req models.UpdateProfileRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		utils.ValidationErrorResponse(c, err)
+		return
+	}
+
+	// Update profile
+	user, err := h.service.UpdateProfile(ctx, userID, &req)
+	if err != nil {
+		utils.ErrorResponse(c, http.StatusInternalServerError, "failed to update profile")
+		return
+	}
+
+	utils.SuccessResponse(c, gin.H{
+		"message": "profile updated successfully",
+		"user":    user,
+	})
+}
+
+// ChangePassword godoc
+// @Summary      Change password
+// @Description  Change authenticated user's password
+// @Tags         profile
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        request  body      models.ChangePasswordRequest  true  "Password change request"
+// @Success      200      {object}  map[string]interface{}        "Password changed successfully"
+// @Failure      400      {object}  map[string]interface{}        "Invalid request or wrong password"
+// @Failure      401      {object}  map[string]interface{}        "Unauthorized"
+// @Failure      500      {object}  map[string]interface{}        "Internal server error"
+// @Router       /users/me/password [put]
+func (h *UserHandler) ChangePassword(c *gin.Context) {
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 5*time.Second)
+	defer cancel()
+
+	// Get user ID from context
+	userIDInterface, exists := c.Get("user_id")
+	if !exists {
+		utils.ErrorResponse(c, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+
+	userID := userIDInterface.(uint)
+
+	// Bind and validate request
+	var req models.ChangePasswordRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		utils.ValidationErrorResponse(c, err)
+		return
+	}
+
+	// Get user to verify current password
+	user, err := h.service.GetUserByID(ctx, userID)
+	if err != nil {
+		utils.ErrorResponse(c, http.StatusNotFound, "user not found")
+		return
+	}
+
+	// Verify current password
+	if err := auth.CheckPassword(req.CurrentPassword, user.Password); err != nil {
+		utils.ErrorResponse(c, http.StatusBadRequest, "current password is incorrect")
+		return
+	}
+
+	// Hash new password
+	hashedPassword, err := auth.HashPassword(req.NewPassword)
+	if err != nil {
+		utils.ErrorResponse(c, http.StatusInternalServerError, "failed to hash password")
+		return
+	}
+
+	// Change password
+	if err := h.service.ChangePassword(ctx, userID, user.Password, hashedPassword); err != nil {
+		utils.ErrorResponse(c, http.StatusInternalServerError, "failed to change password")
+		return
+	}
+
+	utils.SuccessResponse(c, gin.H{
+		"message": "password changed successfully",
 	})
 }

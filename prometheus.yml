@@ -1,0 +1,76 @@
+# Prometheus configuration for Go REST API monitoring
+# Save as: prometheus.yml
+# Usage: prometheus --config.file=prometheus.yml
+
+global:
+  # How frequently to scrape targets
+  scrape_interval: 15s
+  
+  # How frequently to evaluate alerting rules
+  evaluation_interval: 15s
+  
+  # Attach these labels to any time series or alerts
+  external_labels:
+    monitor: 'go-rest-api-monitor'
+    environment: 'development'
+
+# Alertmanager configuration (optional)
+# alerting:
+#   alertmanagers:
+#     - static_configs:
+#         - targets:
+#           - 'alertmanager:9093'
+
+# Load rules from files
+# rule_files:
+#   - "alerts.yml"
+
+# Scrape configurations
+scrape_configs:
+  # Job for Go REST API
+  - job_name: 'go-rest-api'
+    
+    # Scrape the API every 10 seconds
+    scrape_interval: 10s
+    
+    # Timeout for each scrape
+    scrape_timeout: 5s
+    
+    # Metrics path (default is /metrics)
+    metrics_path: '/metrics'
+    
+    # Scrape protocol
+    scheme: http
+    
+    # Static targets
+    static_configs:
+      - targets: 
+          - 'localhost:8080'
+        labels:
+          service: 'go-rest-api'
+          instance: 'local-dev'
+
+  # Optional: Prometheus self-monitoring
+  - job_name: 'prometheus'
+    scrape_interval: 10s
+    static_configs:
+      - targets:
+          - 'localhost:9090'
+
+# Optional: Service discovery for Kubernetes
+# - job_name: 'kubernetes-pods'
+#   kubernetes_sd_configs:
+#     - role: pod
+#   relabel_configs:
+#     - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+#       action: keep
+#       regex: true
+#     - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_path]
+#       action: replace
+#       target_label: __metrics_path__
+#       regex: (.+)
+#     - source_labels: [__address__, __meta_kubernetes_pod_annotation_prometheus_io_port]
+#       action: replace
+#       regex: ([^:]+)(?::\d+)?;(\d+)
+#       replacement: $1:$2
+#       target_label: __address__

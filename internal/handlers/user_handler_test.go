@@ -1287,7 +1287,7 @@ func TestRBACAuthorization(t *testing.T) {
 		mockService := new(MockUserService)
 		meta := models.PaginationMeta{Page: 1, Limit: 10, Total: 0, TotalPages: 0}
 		mockService.On("GetAllUsersPaginated", mock.Anything, mock.Anything).Return([]*models.User{}, meta, nil)
-		
+
 		handler := setupHandlerWithMock(mockService)
 		router := setupTestRouter()
 		router.GET("/users", handler.GetAllUsers)
@@ -1303,7 +1303,7 @@ func TestRBACAuthorization(t *testing.T) {
 		mockService := new(MockUserService)
 		user := &models.User{ID: 1, Name: "Test", Email: "test@test.com"}
 		mockService.On("CreateUser", mock.Anything, mock.Anything).Return(user, nil)
-		
+
 		handler := setupHandlerWithMock(mockService)
 		router := setupTestRouter()
 		router.POST("/users", handler.CreateUser)

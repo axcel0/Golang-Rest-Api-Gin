@@ -11,29 +11,45 @@ import (
 // RequireRole middleware ensures user has one of the specified roles
 func RequireRole(allowedRoles ...models.Role) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		// Get user from context (set by JWT middleware)
-		userInterface, exists := c.Get("user")
+		// Try to get user role from context (set by JWT middleware)
+		roleInterface, exists := c.Get("user_role")
 		if !exists {
-			c.JSON(http.StatusUnauthorized, models.ErrorResponse{
-				Success: false,
-				Message: "unauthorized: user not found in context",
-			})
-			c.Abort()
-			return
+			// Fallback: try to get from user object
+			userInterface, userExists := c.Get("user")
+			if !userExists {
+				c.JSON(http.StatusUnauthorized, models.ErrorResponse{
+					Success: false,
+					Message: "unauthorized: user not found in context",
+				})
+				c.Abort()
+				return
+			}
+
+			user, ok := userInterface.(*models.User)
+			if !ok {
+				c.JSON(http.StatusInternalServerError, models.ErrorResponse{
+					Success: false,
+					Message: "internal error: invalid user type",
+				})
+				c.Abort()
+				return
+			}
+			roleInterface = user.Role
 		}
 
-		user, ok := userInterface.(*models.User)
+		// Get role string
+		roleStr, ok := roleInterface.(string)
 		if !ok {
 			c.JSON(http.StatusInternalServerError, models.ErrorResponse{
 				Success: false,
-				Message: "internal error: invalid user type",
+				Message: "internal error: invalid role type",
 			})
 			c.Abort()
 			return
 		}
 
 		// Check if user's role is in allowed roles
-		userRole := models.Role(user.Role)
+		userRole := models.Role(roleStr)
 		for _, role := range allowedRoles {
 			if userRole == role {
 				c.Next()
@@ -70,7 +86,7 @@ func CheckOwnershipOrAdmin(userID uint, requestingUser *models.User) bool {
 	if requestingUser.IsAdmin() {
 		return true
 	}
-	
+
 	// User can only access their own resources
 	return requestingUser.ID == userID
 }

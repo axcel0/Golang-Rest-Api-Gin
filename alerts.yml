@@ -1,0 +1,175 @@
+# Prometheus alerting rules for Go REST API
+# Save as: alerts.yml
+# Add to prometheus.yml: rule_files: ["alerts.yml"]
+
+groups:
+  - name: go_rest_api_alerts
+    interval: 30s
+    rules:
+      # HIGH ERROR RATE
+      - alert: HighErrorRate
+        expr: |
+          (
+            sum(rate(http_requests_total{status=~"5.."}[5m])) 
+            / 
+            sum(rate(http_requests_total[5m]))
+          ) > 0.05
+        for: 5m
+        labels:
+          severity: critical
+          component: api
+        annotations:
+          summary: "High error rate detected"
+          description: "Error rate is {{ $value | humanizePercentage }} (threshold: 5%)"
+          dashboard: "http://grafana/d/api-overview"
+
+      # HIGH LATENCY
+      - alert: HighLatency
+        expr: |
+          histogram_quantile(0.95,
+            sum(rate(http_request_duration_seconds_bucket[5m])) by (le, endpoint)
+          ) > 1
+        for: 5m
+        labels:
+          severity: warning
+          component: api
+        annotations:
+          summary: "High latency on {{ $labels.endpoint }}"
+          description: "95th percentile latency is {{ $value }}s (threshold: 1s)"
+          endpoint: "{{ $labels.endpoint }}"
+
+      # VERY HIGH LATENCY
+      - alert: VeryHighLatency
+        expr: |
+          histogram_quantile(0.95,
+            sum(rate(http_request_duration_seconds_bucket[5m])) by (le, endpoint)
+          ) > 5
+        for: 2m
+        labels:
+          severity: critical
+          component: api
+        annotations:
+          summary: "Very high latency on {{ $labels.endpoint }}"
+          description: "95th percentile latency is {{ $value }}s (threshold: 5s)"
+
+      # HIGH MEMORY USAGE
+      - alert: HighMemoryUsage
+        expr: go_memstats_alloc_bytes > 500 * 1024 * 1024
+        for: 5m
+        labels:
+          severity: warning
+          component: api
+        annotations:
+          summary: "High memory usage"
+          description: "Memory usage is {{ $value | humanize }}B (threshold: 500MB)"
+
+      # CRITICAL MEMORY USAGE
+      - alert: CriticalMemoryUsage
+        expr: go_memstats_alloc_bytes > 1024 * 1024 * 1024
+        for: 2m
+        labels:
+          severity: critical
+          component: api
+        annotations:
+          summary: "Critical memory usage"
+          description: "Memory usage is {{ $value | humanize }}B (threshold: 1GB)"
+
+      # TOO MANY GOROUTINES
+      - alert: TooManyGoroutines
+        expr: go_goroutines > 1000
+        for: 5m
+        labels:
+          severity: warning
+          component: api
+        annotations:
+          summary: "Too many goroutines"
+          description: "Goroutine count is {{ $value }} (threshold: 1000)"
+
+      # HIGH ACTIVE CONNECTIONS
+      - alert: HighActiveConnections
+        expr: http_active_connections > 100
+        for: 5m
+        labels:
+          severity: warning
+          component: api
+        annotations:
+          summary: "High number of active connections"
+          description: "Active connections: {{ $value }} (threshold: 100)"
+
+      # API DOWN
+      - alert: APIDown
+        expr: up{job="go-rest-api"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          component: api
+        annotations:
+          summary: "API is down"
+          description: "Go REST API at {{ $labels.instance }} has been down for more than 1 minute"
+
+      # HIGH REQUEST RATE
+      - alert: HighRequestRate
+        expr: |
+          sum(rate(http_requests_total[5m])) > 1000
+        for: 5m
+        labels:
+          severity: info
+          component: api
+        annotations:
+          summary: "High request rate"
+          description: "Request rate is {{ $value }} req/s (informational threshold: 1000 req/s)"
+
+      # LOW REQUEST RATE (potential issue)
+      - alert: LowRequestRate
+        expr: |
+          sum(rate(http_requests_total[5m])) < 1
+        for: 10m
+        labels:
+          severity: info
+          component: api
+        annotations:
+          summary: "Unusually low request rate"
+          description: "Request rate is {{ $value }} req/s (might indicate connectivity issues)"
+
+      # HIGH GC FREQUENCY
+      - alert: HighGCFrequency
+        expr: rate(go_gc_duration_seconds_count[5m]) > 10
+        for: 5m
+        labels:
+          severity: warning
+          component: api
+        annotations:
+          summary: "High garbage collection frequency"
+          description: "GC running {{ $value }} times per second (threshold: 10/s)"
+
+      # AUTHENTICATION FAILURES
+      - alert: HighAuthFailureRate
+        expr: |
+          (
+            sum(rate(http_requests_total{endpoint=~"/api/v1/auth/.*",status="401"}[5m]))
+            /
+            sum(rate(http_requests_total{endpoint=~"/api/v1/auth/.*"}[5m]))
+          ) > 0.3
+        for: 5m
+        labels:
+          severity: warning
+          component: auth
+        annotations:
+          summary: "High authentication failure rate"
+          description: "Auth failure rate is {{ $value | humanizePercentage }} (threshold: 30%)"
+
+      # CLIENT ERRORS (4xx)
+      - alert: HighClientErrorRate
+        expr: |
+          (
+            sum(rate(http_requests_total{status=~"4.."}[5m]))
+            /
+            sum(rate(http_requests_total[5m]))
+          ) > 0.2
+        for: 5m
+        labels:
+          severity: warning
+          component: api
+        annotations:
+          summary: "High client error rate"
+          description: "Client error rate is {{ $value | humanizePercentage }} (threshold: 20%)"

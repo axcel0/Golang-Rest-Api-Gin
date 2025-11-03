@@ -128,8 +128,9 @@ func AuthMiddleware(jwtManager *auth.JWTManager) gin.HandlerFunc {
 		// Set user info in context
 		c.Set("user_id", claims.UserID)
 		c.Set("user_email", claims.Email)
+		c.Set("user_role", claims.Role) // Add role for RBAC
 
-		logger.Debug("User authenticated", "user_id", claims.UserID, "email", claims.Email)
+		logger.Debug("User authenticated", "user_id", claims.UserID, "email", claims.Email, "role", claims.Role)
 
 		c.Next()
 	}
