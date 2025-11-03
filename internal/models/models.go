@@ -34,9 +34,9 @@ type User struct {
 	Age         int            `gorm:"not null" json:"age"`
 	Role        string         `gorm:"type:varchar(20);default:'user';not null" json:"role"` // Role: superadmin, admin, user
 	IsActive    bool           `gorm:"default:true" json:"is_active"`
-	AvatarURL   string         `gorm:"type:varchar(255)" json:"avatar_url,omitempty"`   // Profile avatar URL
-	Bio         string         `gorm:"type:text" json:"bio,omitempty"`                  // User biography
-	PhoneNumber string         `gorm:"type:varchar(20)" json:"phone_number,omitempty"`  // Contact phone number
+	AvatarURL   string         `gorm:"type:varchar(255)" json:"avatar_url,omitempty"`  // Profile avatar URL
+	Bio         string         `gorm:"type:text" json:"bio,omitempty"`                 // User biography
+	PhoneNumber string         `gorm:"type:varchar(20)" json:"phone_number,omitempty"` // Contact phone number
 	CreatedAt   time.Time      `json:"created_at"`
 	UpdatedAt   time.Time      `json:"updated_at"`
 	DeletedAt   gorm.DeletedAt `gorm:"index" json:"-"`

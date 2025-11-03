@@ -96,26 +96,26 @@ func main() {
 
 	// Initialize health service with checkers
 	healthService := health.NewHealthService()
-	
+
 	// Register database health checker (5 second timeout)
 	healthService.RegisterChecker("database", &health.DatabaseChecker{
 		DB:      db,
 		Timeout: 5 * time.Second,
 	})
-	
+
 	// Register disk space checker (80% warning, 90% critical)
 	healthService.RegisterChecker("disk", &health.DiskSpaceChecker{
 		Path:              "/",
 		WarningThreshold:  80.0,
 		CriticalThreshold: 90.0,
 	})
-	
+
 	// Register memory checker (500MB warning, 1GB critical)
 	healthService.RegisterChecker("memory", &health.MemoryChecker{
 		WarningThresholdMB:  500,
 		CriticalThresholdMB: 1024,
 	})
-	
+
 	logger.Info("✅ Health checks configured")
 
 	// Initialize WebSocket hub
@@ -148,11 +148,11 @@ func main() {
 	prometheusMetrics := metrics.NewMetrics()
 
 	// Apply global middleware
-	r.Use(middleware.Recovery())        // Panic recovery
-	r.Use(middleware.Logger())          // Custom logger
-	r.Use(middleware.CORS())            // CORS support
+	r.Use(middleware.Recovery())          // Panic recovery
+	r.Use(middleware.Logger())            // Custom logger
+	r.Use(middleware.CORS())              // CORS support
 	r.Use(prometheusMetrics.Middleware()) // Prometheus metrics
-	r.Use(middleware.ErrorHandler())    // Centralized error handling
+	r.Use(middleware.ErrorHandler())      // Centralized error handling
 
 	// Rate limiting middleware (from config)
 	// Convert per-minute to per-second: 100 req/min = 100/60 req/sec
@@ -180,13 +180,13 @@ func main() {
 		JWTManager:  jwtManager,
 	}
 	graphqlServer := handler.NewDefaultServer(graph.NewExecutableSchema(graph.Config{Resolvers: graphqlResolver}))
-	
+
 	// GraphQL playground (only in development)
 	if cfg.App.Environment != "production" {
 		r.GET("/graphql", gin.WrapH(playground.Handler("GraphQL Playground", "/query")))
 		logger.Info("📊 GraphQL Playground enabled", "url", "http://localhost:8080/graphql")
 	}
-	
+
 	// GraphQL query endpoint (with JWT authentication)
 	r.POST("/query", func(c *gin.Context) {
 		// Extract JWT token and add userID to context
@@ -207,7 +207,7 @@ func main() {
 
 	// WebSocket routes
 	r.GET("/ws", wsHandler.HandleWebSocket)
-	
+
 	// WebSocket management endpoints (protected)
 	wsRoutes := r.Group("/ws")
 	wsRoutes.Use(middleware.JWTAuth(jwtManager, userRepo))

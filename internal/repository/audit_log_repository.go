@@ -24,14 +24,14 @@ func (r *AuditLogRepository) Create(log *models.AuditLog) error {
 
 // AuditLogFilter represents filter options for querying audit logs
 type AuditLogFilter struct {
-	UserID     *uint
-	Action     *models.AuditAction
-	Resource   *models.AuditResource
-	Success    *bool
-	StartDate  *time.Time
-	EndDate    *time.Time
-	Page       int
-	PageSize   int
+	UserID    *uint
+	Action    *models.AuditAction
+	Resource  *models.AuditResource
+	Success   *bool
+	StartDate *time.Time
+	EndDate   *time.Time
+	Page      int
+	PageSize  int
 }
 
 // List retrieves audit logs with optional filters

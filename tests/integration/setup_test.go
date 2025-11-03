@@ -89,7 +89,7 @@ func setupTestEnvironment() {
 // setupRouter creates the router with all routes and middleware
 func setupRouter() *gin.Engine {
 	router := gin.New()
-	
+
 	// Add middleware
 	router.Use(gin.Recovery())
 	router.Use(middleware.CORS())

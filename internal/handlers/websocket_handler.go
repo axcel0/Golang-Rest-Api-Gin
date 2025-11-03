@@ -174,7 +174,7 @@ func (h *WebSocketHandler) NotifyUserDeleted(data map[string]interface{}) {
 func (h *WebSocketHandler) NotifyRoleChanged(userID uint, data map[string]interface{}) {
 	// Notify the user whose role changed
 	h.hub.BroadcastToUser(userID, ws.EventUserRoleChanged, data)
-	
+
 	// Notify all admins
 	h.hub.BroadcastToRole("admin", ws.EventUserRoleChanged, data)
 	h.hub.BroadcastToRole("superadmin", ws.EventUserRoleChanged, data)

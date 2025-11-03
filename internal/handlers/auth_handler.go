@@ -217,7 +217,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	}
 
 	logger.Info("User logged in successfully", "user_id", user.ID, "email", user.Email)
-	
+
 	// Log successful login
 	h.auditService.LogAuthAction(c, &user.ID, models.AuditActionLogin, true, "")
 
@@ -265,12 +265,12 @@ func (h *AuthHandler) RefreshToken(c *gin.Context) {
 		})
 		return
 	}
-	
+
 	// Validate refresh token to get claims for audit logging
 	claims, _ := h.jwtManager.ValidateToken(req.RefreshToken)
 
 	logger.Info("Access token refreshed successfully")
-	
+
 	// Log token refresh
 	if claims != nil {
 		h.auditService.LogAuthAction(c, &claims.UserID, models.AuditActionRefreshToken, true, "")

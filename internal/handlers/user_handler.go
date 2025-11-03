@@ -270,7 +270,7 @@ func (h *UserHandler) GetUserStats(c *gin.Context) {
 // @Router       /users/{id}/role [put]
 func (h *UserHandler) UpdateUserRole(c *gin.Context) {
 	var requestingUserID uint
-	
+
 	// Get requesting user role from context
 	userRoleInterface, exists := c.Get("user_role")
 	if !exists {
@@ -306,7 +306,7 @@ func (h *UserHandler) UpdateUserRole(c *gin.Context) {
 			utils.ErrorResponse(c, http.StatusForbidden, "only superadmin can change user roles")
 			return
 		}
-		
+
 		// Get user ID from context
 		userIDInterface, _ := c.Get("user_id")
 		requestingUserID = userIDInterface.(uint)

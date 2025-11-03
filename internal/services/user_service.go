@@ -298,7 +298,7 @@ func (s *UserService) ChangePassword(ctx context.Context, userID uint, currentPa
 
 	// Note: Password verification should be done at handler level with auth.CheckPassword
 	// This service assumes password has already been verified
-	
+
 	// Hash new password
 	// Note: Hashing should be done at handler level with auth.HashPassword
 	// This service receives already-hashed password

@@ -58,7 +58,7 @@ func (h *HealthHandler) HealthCheck(c *gin.Context) {
 func (h *HealthHandler) ReadinessCheck(c *gin.Context) {
 	// Simple check - service is running
 	c.JSON(http.StatusOK, gin.H{
-		"status": "ready",
+		"status":  "ready",
 		"service": "Go-Lang-project-01",
 	})
 }

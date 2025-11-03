@@ -158,7 +158,7 @@ func TestUserCRUDFlow(t *testing.T) {
 		var createResp map[string]interface{}
 		err = json.Unmarshal(w.Body.Bytes(), &createResp)
 		require.NoError(t, err)
-		
+
 		data := createResp["data"].(map[string]interface{})
 		userID := int(data["id"].(float64))
 		assert.NotZero(t, userID)

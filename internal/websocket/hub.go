@@ -12,13 +12,13 @@ import (
 type EventType string
 
 const (
-	EventUserCreated      EventType = "user.created"
-	EventUserUpdated      EventType = "user.updated"
-	EventUserDeleted      EventType = "user.deleted"
-	EventUserRoleChanged  EventType = "user.role.changed"
-	EventProfileUpdated   EventType = "profile.updated"
-	EventPasswordChanged  EventType = "password.changed"
-	EventSystemAlert      EventType = "system.alert"
+	EventUserCreated         EventType = "user.created"
+	EventUserUpdated         EventType = "user.updated"
+	EventUserDeleted         EventType = "user.deleted"
+	EventUserRoleChanged     EventType = "user.role.changed"
+	EventProfileUpdated      EventType = "profile.updated"
+	EventPasswordChanged     EventType = "password.changed"
+	EventSystemAlert         EventType = "system.alert"
 	EventHealthStatusChanged EventType = "health.status.changed"
 )
 
@@ -124,7 +124,7 @@ func (h *Hub) BroadcastToAll(eventType EventType, data map[string]interface{}) {
 		Data:      data,
 		Timestamp: time.Now(),
 	}
-	
+
 	select {
 	case h.Broadcast <- message:
 		logger.Debug("Broadcasting message", "type", eventType, "clients", len(h.clients))

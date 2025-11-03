@@ -13,8 +13,8 @@ import (
 type Status string
 
 const (
-	StatusHealthy  Status = "healthy"
-	StatusDegraded Status = "degraded"
+	StatusHealthy   Status = "healthy"
+	StatusDegraded  Status = "degraded"
 	StatusUnhealthy Status = "unhealthy"
 )
 
@@ -27,18 +27,18 @@ type ComponentHealth struct {
 
 // HealthResponse represents the overall health response
 type HealthResponse struct {
-	Status     Status                      `json:"status"`
-	Timestamp  string                      `json:"timestamp"`
+	Status     Status                     `json:"status"`
+	Timestamp  string                     `json:"timestamp"`
 	Components map[string]ComponentHealth `json:"components"`
-	System     SystemInfo                  `json:"system"`
+	System     SystemInfo                 `json:"system"`
 }
 
 // SystemInfo represents system-level information
 type SystemInfo struct {
-	Goroutines   int     `json:"goroutines"`
-	MemoryUsedMB float64 `json:"memory_used_mb"`
+	Goroutines    int     `json:"goroutines"`
+	MemoryUsedMB  float64 `json:"memory_used_mb"`
 	MemoryAllocMB float64 `json:"memory_alloc_mb"`
-	GCPauses     uint32  `json:"gc_pauses"`
+	GCPauses      uint32  `json:"gc_pauses"`
 }
 
 // Checker interface for health checkers
@@ -81,7 +81,7 @@ func (d *DatabaseChecker) Check(ctx context.Context) ComponentHealth {
 
 	// Get database stats
 	stats := sqlDB.Stats()
-	
+
 	// Check for connection issues
 	if stats.OpenConnections == 0 {
 		return ComponentHealth{
