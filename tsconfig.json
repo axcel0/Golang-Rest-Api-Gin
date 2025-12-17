@@ -5,11 +5,16 @@
     "lib": ["ES2022"],
     "module": "commonjs",
     
-    /* Modules */
-    "moduleResolution": "node",
+    /* Modules - TS6 Best Practice for CommonJS bundlers */
+    "moduleResolution": "bundler",
     "resolveJsonModule": true,
+    "resolvePackageJsonExports": true,
+    "resolvePackageJsonImports": true,
+    
+    /* Interop Constraints - TS6 Modern Standards */
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
+    "verbatimModuleSyntax": false,
     
     /* Emit */
     "outDir": "./dist",

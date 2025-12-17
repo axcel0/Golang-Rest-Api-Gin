@@ -1,6 +1,6 @@
 module Go-Lang-project-01
 
-go 1.25.3
+go 1.25.5
 
 require (
 	github.com/99designs/gqlgen v0.17.81
