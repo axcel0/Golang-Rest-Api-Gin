@@ -71,9 +71,9 @@ func LoadConfig() (*Config, error) {
 	// Set config file name and path
 	viper.SetConfigName("config")
 	viper.SetConfigType("yaml")
-	viper.AddConfigPath("./configs")      // From project root
-	viper.AddConfigPath(".")              // Current directory
-	viper.AddConfigPath("../../configs")  // From cmd/api directory
+	viper.AddConfigPath("./configs")     // From project root
+	viper.AddConfigPath(".")             // Current directory
+	viper.AddConfigPath("../../configs") // From cmd/api directory
 
 	// Set default values
 	setDefaults()

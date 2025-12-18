@@ -72,6 +72,36 @@ func (u *User) CanPromoteUsers() bool {
 	return u.IsSuperAdmin()
 }
 
+// CanManageProducts checks if user can create/update/delete products (superadmin only)
+func (u *User) CanManageProducts() bool {
+	return u.IsSuperAdmin()
+}
+
+// CanViewAnalytics checks if user can view analytics (admin or superadmin)
+func (u *User) CanViewAnalytics() bool {
+	return u.IsAdmin()
+}
+
+// CanManageStock checks if user can manage stock restok/adjustment (superadmin only)
+func (u *User) CanManageStock() bool {
+	return u.IsSuperAdmin()
+}
+
+// CanManageCategories checks if user can manage categories (admin or superadmin)
+func (u *User) CanManageCategories() bool {
+	return u.IsAdmin()
+}
+
+// CanManageStores checks if user can manage stores (admin or superadmin)
+func (u *User) CanManageStores() bool {
+	return u.IsAdmin()
+}
+
+// CanCreateTransaction checks if user can create transaction (user or superadmin)
+func (u *User) CanCreateTransaction() bool {
+	return u.Role == string(RoleUser) || u.IsSuperAdmin()
+}
+
 // CreateUserRequest represents the request body for creating a user
 type CreateUserRequest struct {
 	Name     string `json:"name" binding:"required,min=2,max=100" example:"John Doe"`

@@ -118,14 +118,14 @@ func (h *WebSocketHandler) GetStats(c *gin.Context) {
 	}
 
 	stats := h.hub.GetStats()
-	
+
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,
 		"message": "WebSocket statistics retrieved successfully",
 		"data": gin.H{
-			"total_connections": stats["total_connections"],
+			"total_connections":  stats["total_connections"],
 			"active_connections": stats["active_connections"],
-			"user_id": userID,
+			"user_id":            userID,
 		},
 	})
 }

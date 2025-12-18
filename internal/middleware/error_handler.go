@@ -28,6 +28,7 @@ func ErrorHandler() gin.HandlerFunc {
 // Recovery middleware for panic recovery
 func Recovery() gin.HandlerFunc {
 	return gin.CustomRecovery(func(c *gin.Context, recovered interface{}) {
+		_ = recovered
 		c.JSON(http.StatusInternalServerError, models.Response{
 			Success: false,
 			Message: "Internal server error",

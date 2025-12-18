@@ -29,8 +29,20 @@ const (
 	// Role management
 	AuditActionRoleChange AuditAction = "role_change"
 
+	// Catalog actions
+	AuditActionCategoryCreate AuditAction = "category_create"
+	AuditActionCategoryUpdate AuditAction = "category_update"
+	AuditActionCategoryDelete AuditAction = "category_delete"
+	AuditActionStoreCreate    AuditAction = "store_create"
+	AuditActionStoreUpdate    AuditAction = "store_update"
+	AuditActionStoreDelete    AuditAction = "store_delete"
+
 	// System actions
 	AuditActionSystemAccess AuditAction = "system_access"
+
+	// Resource actions
+	AuditResourceCategory AuditResource = "category"
+	AuditResourceStore    AuditResource = "store"
 )
 
 // AuditResource represents the resource being accessed

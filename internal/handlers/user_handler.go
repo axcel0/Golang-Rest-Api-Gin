@@ -309,7 +309,12 @@ func (h *UserHandler) UpdateUserRole(c *gin.Context) {
 
 		// Get user ID from context
 		userIDInterface, _ := c.Get("user_id")
-		requestingUserID = userIDInterface.(uint)
+		if uid, ok := userIDInterface.(uint); ok {
+			requestingUserID = uid
+		} else {
+			utils.ErrorResponse(c, http.StatusUnauthorized, "invalid user context")
+			return
+		}
 	}
 
 	// Get user ID from URL
@@ -376,11 +381,14 @@ func (h *UserHandler) GetMe(c *gin.Context) {
 		utils.ErrorResponse(c, http.StatusUnauthorized, "unauthorized")
 		return
 	}
-
-	userID := userIDInterface.(uint)
+	uid, ok := userIDInterface.(uint)
+	if !ok {
+		utils.ErrorResponse(c, http.StatusUnauthorized, "invalid user context")
+		return
+	}
 
 	// Get user
-	user, err := h.service.GetUserByID(ctx, userID)
+	user, err := h.service.GetUserByID(ctx, uid)
 	if err != nil {
 		utils.ErrorResponse(c, http.StatusNotFound, "user not found")
 		return
@@ -412,8 +420,11 @@ func (h *UserHandler) UpdateMe(c *gin.Context) {
 		utils.ErrorResponse(c, http.StatusUnauthorized, "unauthorized")
 		return
 	}
-
-	userID := userIDInterface.(uint)
+	uid, ok := userIDInterface.(uint)
+	if !ok {
+		utils.ErrorResponse(c, http.StatusUnauthorized, "invalid user context")
+		return
+	}
 
 	// Bind and validate request
 	var req models.UpdateProfileRequest
@@ -423,7 +434,7 @@ func (h *UserHandler) UpdateMe(c *gin.Context) {
 	}
 
 	// Update profile
-	user, err := h.service.UpdateProfile(ctx, userID, &req)
+	user, err := h.service.UpdateProfile(ctx, uid, &req)
 	if err != nil {
 		utils.ErrorResponse(c, http.StatusInternalServerError, "failed to update profile")
 		return
@@ -458,8 +469,11 @@ func (h *UserHandler) ChangePassword(c *gin.Context) {
 		utils.ErrorResponse(c, http.StatusUnauthorized, "unauthorized")
 		return
 	}
-
-	userID := userIDInterface.(uint)
+	uid, ok := userIDInterface.(uint)
+	if !ok {
+		utils.ErrorResponse(c, http.StatusUnauthorized, "invalid user context")
+		return
+	}
 
 	// Bind and validate request
 	var req models.ChangePasswordRequest
@@ -469,7 +483,7 @@ func (h *UserHandler) ChangePassword(c *gin.Context) {
 	}
 
 	// Get user to verify current password
-	user, err := h.service.GetUserByID(ctx, userID)
+	user, err := h.service.GetUserByID(ctx, uid)
 	if err != nil {
 		utils.ErrorResponse(c, http.StatusNotFound, "user not found")
 		return
@@ -489,7 +503,7 @@ func (h *UserHandler) ChangePassword(c *gin.Context) {
 	}
 
 	// Change password
-	if err := h.service.ChangePassword(ctx, userID, user.Password, hashedPassword); err != nil {
+	if err := h.service.ChangePassword(ctx, uid, hashedPassword); err != nil {
 		utils.ErrorResponse(c, http.StatusInternalServerError, "failed to change password")
 		return
 	}

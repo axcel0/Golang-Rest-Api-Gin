@@ -12,11 +12,11 @@ import (
 
 // HealthHandler handles health check endpoints
 type HealthHandler struct {
-	healthService *health.HealthService
+	healthService *health.Service
 }
 
 // NewHealthHandler creates a new health handler
-func NewHealthHandler(healthService *health.HealthService) *HealthHandler {
+func NewHealthHandler(healthService *health.Service) *HealthHandler {
 	return &HealthHandler{
 		healthService: healthService,
 	}
@@ -28,8 +28,8 @@ func NewHealthHandler(healthService *health.HealthService) *HealthHandler {
 // @Tags         health
 // @Accept       json
 // @Produce      json
-// @Success      200  {object}  health.HealthResponse
-// @Failure      503  {object}  health.HealthResponse
+// @Success      200  {object}  health.Response
+// @Failure      503  {object}  health.Response
 // @Router       /health [get]
 func (h *HealthHandler) HealthCheck(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(c.Request.Context(), 5*time.Second)

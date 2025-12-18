@@ -80,9 +80,9 @@ func JWTAuth(jwtManager *auth.JWTManager, userRepo *repository.UserRepository) g
 		// Set user info in context
 		c.Set("user_id", claims.UserID)
 		c.Set("user_email", claims.Email)
-		c.Set("userID", claims.UserID)      // For WebSocket handlers
-		c.Set("userRole", user.Role)        // For WebSocket handlers
-		c.Set("user", user)                 // For RBAC checks
+		c.Set("userID", claims.UserID) // For WebSocket handlers
+		c.Set("userRole", user.Role)   // For WebSocket handlers
+		c.Set("user", user)            // For RBAC checks
 
 		logger.Debug("User authenticated", "user_id", claims.UserID, "email", claims.Email, "role", user.Role)
 

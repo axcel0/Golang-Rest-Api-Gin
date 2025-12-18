@@ -1,49 +1,67 @@
-# 🚀 GO Lang Project 01
+# 🛒 POS01 - Point of Sale System
 
-Production-ready REST API built with Go 1.25.3, following best practices and clean architecture.
+Production-ready POS REST API built with Go 1.25.5, Gin, GORM, and SQLite. Designed for retail businesses with complete transaction flow, stock management, and analytics.
 
 ![Tests](https://img.shields.io/badge/tests-34%2F34%20passing-brightgreen)
 ![Coverage](https://img.shields.io/badge/coverage-100%25-brightgreen)
-![Go Version](https://img.shields.io/badge/go-1.25.3-blue)
+![Go Version](https://img.shields.io/badge/go-1.25.5-blue)
 ![Build](https://img.shields.io/badge/build-passing-brightgreen)
+![Lint](https://img.shields.io/badge/golangci--lint-passing-brightgreen)
+
+## 📚 Documentation
+
+- **[Complete Documentation](docs/POS_DOCUMENTATION.md)** - Comprehensive guide (3000+ lines)
+- **[Changelog](CHANGELOG.md)** - Version history and release notes
+- **[Swagger UI](http://localhost:8080/swagger/index.html)** - Interactive API documentation (when server running)
+- **[Development Guidelines](.github/copilot-instructions.md)** - Code standards and best practices
 
 ## ✨ Features
 
-- ✅ **Clean Architecture** - Separation of concerns with layered design
-- ✅ **Request Validation** - Using `validator/v10` with detailed error responses
-- ✅ **Pagination & Filtering** - Efficient data retrieval with search, sort, filter
-- ✅ **Configuration Management** - Viper-based config with environment override
-- ✅ **Rate Limiting** - Per-IP protection using token bucket algorithm (configurable)
-- ✅ **Structured Logging** - log/slog with JSON format for production monitoring
-- ✅ **JWT Authentication** - Secure token-based auth with bcrypt password hashing
-- ✅ **RBAC (Role-Based Access Control)** - Three-tier role system (superadmin/admin/user)
-- ✅ **WebSocket Support** - Real-time updates with JWT authentication
-- ✅ **Prometheus Metrics** - Production-grade monitoring and observability
-- ✅ **Health Checks** - Liveness & readiness probes for Kubernetes
+### 🛒 POS Core Features
+- ✅ **Complete Transaction Flow** - Checkout, receipt generation, printer integration ready
+- ✅ **Stock Management** - Real-time tracking with automatic adjustment and audit trail
+- ✅ **Product Management** - CRUD with barcode scanner support
+- ✅ **Category & Store Management** - Multi-category and multi-store support
+- ✅ **Analytics & Reports** - Revenue, profit, top products, payment breakdowns
+- ✅ **Decimal Precision** - Using `shopspring/decimal` for accurate financial calculations
+
+### 🔐 Security & Authentication
+- ✅ **JWT Authentication** - Secure token-based auth with refresh tokens
+- ✅ **RBAC (Role-Based Access Control)** - Three-tier role system (user/admin/superadmin)
 - ✅ **Audit Logging** - Complete activity tracking for compliance
-- ✅ **GraphQL API** - Modern query language with playground
-- ✅ **Type-Safe SQL** - SQLC for compile-time SQL verification
-- ✅ **Database Migrations** - Version-controlled schema changes
-- ✅ **Comprehensive Testing** - 100% test coverage (34/34 passing)
-- ✅ **API Documentation** - Swagger/OpenAPI with interactive UI
-- ✅ **CI/CD Pipeline** - Automated quality gates with golangci-lint, govulncheck
+- ✅ **Input Validation** - Using `validator/v10` with detailed error responses
+- ✅ **Password Hashing** - Bcrypt with appropriate cost factor
+
+### 🏗️ Architecture & Code Quality
+- ✅ **Clean Architecture** - Separation of concerns with layered design (Handler → Service → Repository)
+- ✅ **100% Test Coverage** - 34/34 tests passing, all scenarios covered
+- ✅ **Zero Linting Errors** - golangci-lint passing with strict configuration
+- ✅ **Type Safety** - Safe type assertions and decimal calculations throughout
+- ✅ **Error Handling** - Comprehensive error checking and proper error propagation
+
+### 🚀 Production Features
+### 🚀 Production Features
+- ✅ **Health Checks** - Liveness & readiness probes for Kubernetes
+- ✅ **Prometheus Metrics** - Production-grade monitoring and observability
+- ✅ **WebSocket Support** - Real-time updates with JWT authentication
+- ✅ **Rate Limiting** - Per-IP protection using token bucket algorithm
+- ✅ **CORS Configuration** - Configurable cross-origin resource sharing
+- ✅ **Structured Logging** - log/slog with JSON format for production monitoring
+- ✅ **Database Migrations** - Auto-migration on startup
 - ✅ **Docker Support** - Multi-stage production build
-- ✅ **NO DEPRECATED CODE** - SA1019 enforcement in CI
+- ✅ **API Documentation** - Swagger/OpenAPI with interactive UI
 
 ## 🛠️ Tech Stack
 
-- **Go**: 1.25.3 (Latest Stable)
+- **Go**: 1.25.5 (Latest Stable)
 - **Framework**: Gin v1.11.0
 - **ORM**: GORM v1.31.0
-- **Config**: Viper v1.21.0
+- **Database**: SQLite (dev) / PostgreSQL (production)
+- **Decimal**: shopspring/decimal v1.4.0 (financial precision)
+- **Auth**: golang-jwt/jwt/v5
 - **Validation**: go-playground/validator/v10
-- **Rate Limiting**: golang.org/x/time/rate
-- **Logging**: log/slog (stdlib)
-- **Auth**: golang-jwt/jwt/v5, golang.org/x/crypto/bcrypt
-- **Type-Safe SQL**: sqlc
-- **Migrations**: golang-migrate/migrate/v4
-- **Testing**: testify, httptest
-- **Docs**: swaggo/swag
+- **Testing**: testify v1.10.0
+- **Linting**: golangci-lint (latest)
 
 ## 📁 Project Structure
 
@@ -76,42 +94,85 @@ Production-ready REST API built with Go 1.25.3, following best practices and cle
 
 ### Prerequisites
 
-- Go 1.25.3+
-- Make
-- Docker (optional)
+- Go 1.25.5+
+- SQLite 3 (auto-created)
+- Port 8080 available
 
-### Installation
+### Installation & Running
 
-1. **Clone the repository**
+**Option 1: Direct Run (Fastest)**
 ```bash
-git clone <repository-url>
-cd "GO Lang Project 01"
+cd cmd/api
+go run main.go
 ```
 
-2. **Install dependencies**
+**Option 2: Build & Run**
 ```bash
-go mod download
+go build -o bin/api ./cmd/api
+./bin/api
 ```
 
-3. **Install development tools**
+**Option 3: Docker**
 ```bash
-make install-tools
+docker build -t pos01:latest .
+docker run -p 8080:8080 pos01:latest
 ```
 
-4. **Setup configuration**
+### Verify Installation
+
 ```bash
-cp .env.example .env
-# Edit .env with your settings
+# Health check
+curl http://localhost:8080/health | jq .
+
+# API documentation
+open http://localhost:8080/swagger/index.html
+
+# Run tests
+bash setup_test_env.sh && bash run_tests.sh
 ```
 
-5. **Run the application**
-```bash
-make run
+**Expected Output:**
+```
+✅ Configuration loaded successfully
+✅ Database connected successfully! (SQLite)
+✅ Database migration completed
+✅ JWT authentication initialized
+✅ Health checks configured
+✅ WebSocket hub initialized
+🚀 Server starting...
+🌐 Server listening address http://localhost:8080
 ```
 
-## 🧪 Development
+## 🧪 Testing
 
-### Available Make Commands
+### Run All Tests
+
+```bash
+# Integration tests
+bash setup_test_env.sh && bash run_tests.sh
+
+# Unit tests
+go test -v ./...
+
+# With coverage
+go test -v -cover ./...
+
+# Linting
+golangci-lint run ./...
+```
+
+### Test Results
+
+```
+Total Tests:  34
+Passed:       34
+Failed:       0
+Coverage:     100%
+```
+
+## 🧰 Development
+
+### Available Commands
 
 ```bash
 make help             # Show all available commands

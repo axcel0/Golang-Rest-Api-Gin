@@ -25,8 +25,8 @@ type ComponentHealth struct {
 	Details map[string]interface{} `json:"details,omitempty"`
 }
 
-// HealthResponse represents the overall health response
-type HealthResponse struct {
+// Response represents the overall health response
+type Response struct {
 	Status     Status                     `json:"status"`
 	Timestamp  string                     `json:"timestamp"`
 	Components map[string]ComponentHealth `json:"components"`
@@ -113,7 +113,7 @@ type DiskSpaceChecker struct {
 }
 
 // Check implements Checker for DiskSpaceChecker
-func (d *DiskSpaceChecker) Check(ctx context.Context) ComponentHealth {
+func (d *DiskSpaceChecker) Check(_ context.Context) ComponentHealth {
 	var stat syscall.Statfs_t
 	if err := syscall.Statfs(d.Path, &stat); err != nil {
 		return ComponentHealth{
@@ -127,8 +127,10 @@ func (d *DiskSpaceChecker) Check(ctx context.Context) ComponentHealth {
 	}
 
 	// Calculate disk usage
-	total := stat.Blocks * uint64(stat.Bsize)
-	free := stat.Bfree * uint64(stat.Bsize)
+	// Statfs_t: Blocks and Bfree are uint64, Bsize is int64 (non-negative)
+	bsize := uint64(stat.Bsize) // #nosec G115 - Bsize is filesystem block size, always positive
+	total := stat.Blocks * bsize
+	free := stat.Bfree * bsize
 	used := total - free
 	usagePercent := (float64(used) / float64(total)) * 100
 
@@ -175,7 +177,7 @@ type MemoryChecker struct {
 }
 
 // Check implements Checker for MemoryChecker
-func (m *MemoryChecker) Check(ctx context.Context) ComponentHealth {
+func (m *MemoryChecker) Check(_ context.Context) ComponentHealth {
 	var memStats runtime.MemStats
 	runtime.ReadMemStats(&memStats)
 
@@ -215,25 +217,25 @@ func (m *MemoryChecker) Check(ctx context.Context) ComponentHealth {
 	}
 }
 
-// HealthService manages health checks
-type HealthService struct {
+// Service manages health checks
+type Service struct {
 	checkers map[string]Checker
 }
 
-// NewHealthService creates a new health service
-func NewHealthService() *HealthService {
-	return &HealthService{
+// NewService creates a new health service
+func NewService() *Service {
+	return &Service{
 		checkers: make(map[string]Checker),
 	}
 }
 
 // RegisterChecker registers a new health checker
-func (s *HealthService) RegisterChecker(name string, checker Checker) {
+func (s *Service) RegisterChecker(name string, checker Checker) {
 	s.checkers[name] = checker
 }
 
 // CheckHealth performs all health checks and returns the result
-func (s *HealthService) CheckHealth(ctx context.Context) HealthResponse {
+func (s *Service) CheckHealth(ctx context.Context) Response {
 	components := make(map[string]ComponentHealth)
 	overallStatus := StatusHealthy
 
@@ -254,7 +256,7 @@ func (s *HealthService) CheckHealth(ctx context.Context) HealthResponse {
 	var memStats runtime.MemStats
 	runtime.ReadMemStats(&memStats)
 
-	return HealthResponse{
+	return Response{
 		Status:     overallStatus,
 		Timestamp:  time.Now().Format(time.RFC3339),
 		Components: components,
@@ -268,6 +270,8 @@ func (s *HealthService) CheckHealth(ctx context.Context) HealthResponse {
 }
 
 // Helper function to round float to n decimal places
+//
+//nolint:unparam // precision currently always 2, kept for future flexibility
 func round(val float64, precision int) float64 {
 	ratio := 1.0
 	for i := 0; i < precision; i++ {

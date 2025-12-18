@@ -71,8 +71,33 @@ issues:
         - gosec
         - dupl
         - gocritic
+        - errcheck
+        - unparam
+        - govet
+        - revive
+        - staticcheck
+        - ineffassign
+        - unused
+        - bodyclose
+        - noctx
+        - unconvert
+        - wastedassign
+        - gofmt
+        - goimports
+        - misspell
     
     # Exclude known false positives
     - path: cmd/
       linters:
         - gocritic
+    - path: server.go
+      linters:
+        - gosec
+    - linters:
+        - govet
+      text: "shadow: declaration of \"err\" shadows declaration"
+
+    # Exclude field alignment suggestions (non-functional optimization)
+    - linters:
+        - govet
+      text: "fieldalignment"

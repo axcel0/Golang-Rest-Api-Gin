@@ -50,6 +50,8 @@ import (
 // @description Type "Bearer" followed by a space and JWT token.
 
 func main() {
+	type ctxKey string
+	const ctxUserID ctxKey = "userID"
 	// Load configuration
 	cfg, err := configs.LoadConfig()
 	if err != nil {
@@ -72,7 +74,17 @@ func main() {
 
 	// Auto migrate
 	db := database.GetDB()
-	if err := db.AutoMigrate(&models.User{}, &models.AuditLog{}); err != nil {
+	if err := db.AutoMigrate(
+		&models.User{},
+		&models.AuditLog{},
+		// POS System Models
+		&models.Store{},
+		&models.Category{},
+		&models.Product{},
+		&models.Transaction{},
+		&models.TransactionItem{},
+		&models.StockMovement{},
+	); err != nil {
 		logger.Error("❌ Failed to migrate database", "error", err)
 		os.Exit(1)
 	}
@@ -95,7 +107,7 @@ func main() {
 	logger.Info("✅ JWT authentication initialized")
 
 	// Initialize health service with checkers
-	healthService := health.NewHealthService()
+	healthService := health.NewService()
 
 	// Register database health checker (5 second timeout)
 	healthService.RegisterChecker("database", &health.DatabaseChecker{
@@ -133,6 +145,30 @@ func main() {
 	healthHandler := handlers.NewHealthHandler(healthService)
 	wsHandler := handlers.NewWebSocketHandler(wsHub, jwtManager)
 	auditHandler := handlers.NewAuditHandler(auditService)
+
+	// POS System dependencies
+	productRepo := repository.NewProductRepository(db)
+	productService := services.NewProductService(productRepo, db)
+	productHandler := handlers.NewProductHandler(productService)
+
+	transactionRepo := repository.NewTransactionRepository(db)
+	stockMovementRepo := repository.NewStockMovementRepository(db)
+	transactionService := services.NewTransactionService(transactionRepo, productRepo, stockMovementRepo, db)
+	transactionHandler := handlers.NewTransactionHandler(transactionService)
+
+	stockService := services.NewStockService(productRepo, stockMovementRepo, db)
+	stockHandler := handlers.NewStockHandler(stockService)
+
+	categoryRepo := repository.NewCategoryRepository(db)
+	categoryService := services.NewCategoryService(categoryRepo)
+	categoryHandler := handlers.NewCategoryHandler(categoryService, auditService)
+
+	storeRepo := repository.NewStoreRepository(db)
+	storeService := services.NewStoreService(storeRepo)
+	storeHandler := handlers.NewStoreHandler(storeService, auditService)
+
+	analyticsService := services.NewAnalyticsService(db)
+	analyticsHandler := handlers.NewAnalyticsHandler(analyticsService)
 
 	// Set Gin mode from config
 	if cfg.App.Environment == "production" {
@@ -197,7 +233,7 @@ func main() {
 			if err == nil {
 				// Add userID to context for resolvers
 				c.Request = c.Request.WithContext(
-					context.WithValue(c.Request.Context(), "userID", claims.UserID),
+					context.WithValue(c.Request.Context(), ctxUserID, claims.UserID),
 				)
 			}
 		}
@@ -272,6 +308,83 @@ func main() {
 			auditLogs.GET("/:id", middleware.RequireAdmin(), auditHandler.GetAuditLog)
 			auditLogs.DELETE("/cleanup", middleware.RequireAdmin(), auditHandler.CleanupOldLogs)
 		}
+
+		// Product routes (POS System)
+		products := v1.Group("/products")
+		products.Use(middleware.JWTAuth(jwtManager, userRepo)) // All product endpoints require authentication
+		{
+			// Read operations - any authenticated user can view products
+			products.GET("", productHandler.ListProducts)                            // List all products with pagination
+			products.GET("/:id", productHandler.GetProduct)                          // Get single product
+			products.GET("/by-barcode/:barcode", productHandler.GetProductByBarcode) // Scanner integration
+
+			// Write operations - superadmin only
+			products.POST("", middleware.CanManageProducts(), productHandler.CreateProduct)
+			products.PUT("/:id", middleware.CanManageProducts(), productHandler.UpdateProduct)
+			products.DELETE("/:id", middleware.CanManageProducts(), productHandler.DeleteProduct)
+
+			// Analytics - superadmin only
+			products.GET("/low-stock", middleware.CanViewAnalytics(), productHandler.GetLowStockAlerts)
+		}
+
+		// Category routes
+		categories := v1.Group("/categories")
+		categories.Use(middleware.JWTAuth(jwtManager, userRepo))
+		{
+			categories.GET("", categoryHandler.List)
+			categories.GET(":id", categoryHandler.Get)
+			categories.POST("", middleware.CanManageCatalog(), categoryHandler.Create)
+			categories.PUT(":id", middleware.CanManageCatalog(), categoryHandler.Update)
+			categories.DELETE(":id", middleware.CanManageCatalog(), categoryHandler.Delete)
+		}
+
+		// Store routes
+		stores := v1.Group("/stores")
+		stores.Use(middleware.JWTAuth(jwtManager, userRepo))
+		{
+			stores.GET("", storeHandler.List)
+			stores.GET(":id", storeHandler.Get)
+			stores.POST("", middleware.CanManageCatalog(), storeHandler.Create)
+			stores.PUT(":id", middleware.CanManageCatalog(), storeHandler.Update)
+			stores.DELETE(":id", middleware.CanManageCatalog(), storeHandler.Delete)
+		}
+
+		// Analytics routes
+		analytics := v1.Group("/analytics")
+		analytics.Use(middleware.JWTAuth(jwtManager, userRepo), middleware.CanViewAnalytics())
+		{
+			analytics.GET("/daily", analyticsHandler.DailySummary)
+			analytics.GET("/summary", analyticsHandler.RangeSummary)
+			analytics.GET("/payments", analyticsHandler.PaymentBreakdown)
+			analytics.GET("/top-products", analyticsHandler.TopProducts)
+		}
+
+		// Transaction routes (POS System)
+		transactions := v1.Group("/transactions")
+		transactions.Use(middleware.JWTAuth(jwtManager, userRepo)) // All transaction endpoints require authentication
+		{
+			// Checkout - user or superadmin can create transactions
+			transactions.POST("", middleware.RequireUserOrSuperadmin(), transactionHandler.Checkout)
+
+			// Read operations - authenticated users can view
+			transactions.GET("", transactionHandler.ListTransactions)
+			transactions.GET("/:id", transactionHandler.GetTransaction)
+			transactions.GET("/receipt/:number", transactionHandler.GetTransactionByReceipt)
+			transactions.GET("/:id/receipt", transactionHandler.GetReceipt)
+		}
+
+		// Stock Management routes (POS System)
+		stock := v1.Group("/stock")
+		stock.Use(middleware.JWTAuth(jwtManager, userRepo)) // All stock endpoints require authentication
+		{
+			// Stock operations - superadmin only (CanManageStock)
+			stock.POST("/in", middleware.CanManageStock(), stockHandler.StockIn)
+			stock.POST("/adjust", middleware.CanManageStock(), stockHandler.StockAdjust)
+
+			// View stock movements - authenticated users can view
+			stock.GET("/movements", stockHandler.ListStockMovements)
+			stock.GET("/movements/product/:product_id", stockHandler.GetProductStockHistory)
+		}
 	}
 
 	// Start server
@@ -297,6 +410,33 @@ func main() {
 		"batch", "POST /api/v1/users/batch",
 		"update", "PUT /api/v1/users/:id",
 		"delete", "DELETE /api/v1/users/:id",
+	)
+	logger.Info("   Product endpoints (POS)",
+		"list", "GET /api/v1/products",
+		"get", "GET /api/v1/products/:id",
+		"barcode", "GET /api/v1/products/by-barcode/:barcode",
+		"create", "POST /api/v1/products [superadmin]",
+		"update", "PUT /api/v1/products/:id [superadmin]",
+		"delete", "DELETE /api/v1/products/:id [superadmin]",
+		"low-stock", "GET /api/v1/products/low-stock [superadmin]",
+	)
+	logger.Info("   Transaction endpoints (POS)",
+		"checkout", "POST /api/v1/transactions [user]",
+		"list", "GET /api/v1/transactions",
+		"get", "GET /api/v1/transactions/:id",
+		"receipt", "GET /api/v1/transactions/:id/receipt",
+	)
+	logger.Info("   Stock Management endpoints (POS)",
+		"stock-in", "POST /api/v1/stock/in [superadmin]",
+		"adjust", "POST /api/v1/stock/adjust [superadmin]",
+		"movements", "GET /api/v1/stock/movements",
+		"history", "GET /api/v1/stock/movements/product/:product_id",
+	)
+	logger.Info("   Transaction endpoints (POS)",
+		"checkout", "POST /api/v1/transactions [user/superadmin]",
+		"list", "GET /api/v1/transactions",
+		"get", "GET /api/v1/transactions/:id",
+		"receipt", "GET /api/v1/transactions/:id/receipt",
 	)
 	logger.Info("🎯 Framework", "name", "Gin", "version", "v1.11.0")
 	logger.Info("🌐 Server listening", "address", fmt.Sprintf("http://localhost%s", port))

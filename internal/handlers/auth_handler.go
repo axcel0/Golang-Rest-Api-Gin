@@ -56,7 +56,11 @@ func (h *AuthHandler) Register(c *gin.Context) {
 	defer cancel()
 
 	// Check if email already exists
-	existingUser, _ := h.userRepo.GetByEmail(ctx, req.Email)
+	existingUser, getErr := h.userRepo.GetByEmail(ctx, req.Email)
+	if getErr != nil && getErr.Error() != "record not found" {
+		c.JSON(http.StatusInternalServerError, gin.H{"success": false, "message": "failed to check existing user"})
+		return
+	}
 	if existingUser != nil {
 		logger.Warn("Registration failed: email already exists", "email", req.Email)
 		c.JSON(http.StatusConflict, gin.H{
@@ -267,7 +271,10 @@ func (h *AuthHandler) RefreshToken(c *gin.Context) {
 	}
 
 	// Validate refresh token to get claims for audit logging
-	claims, _ := h.jwtManager.ValidateToken(req.RefreshToken)
+	claims, vErr := h.jwtManager.ValidateToken(req.RefreshToken)
+	if vErr != nil {
+		logger.Warn("Refresh token validation failed", "error", vErr.Error())
+	}
 
 	logger.Info("Access token refreshed successfully")
 
@@ -314,7 +321,12 @@ func (h *AuthHandler) GetProfile(c *gin.Context) {
 	defer cancel()
 
 	// Get user from database
-	user, err := h.userRepo.GetByID(ctx, userID.(uint))
+	uid, ok := userID.(uint)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{"success": false, "message": "invalid user context"})
+		return
+	}
+	user, err := h.userRepo.GetByID(ctx, uid)
 	if err != nil {
 		logger.Error("Failed to get user profile", "error", err, "user_id", userID)
 		c.JSON(http.StatusNotFound, gin.H{

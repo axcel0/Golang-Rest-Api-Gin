@@ -289,7 +289,7 @@ func (s *UserService) UpdateProfile(ctx context.Context, userID uint, req *model
 }
 
 // ChangePassword changes user's password
-func (s *UserService) ChangePassword(ctx context.Context, userID uint, currentPassword, newPassword string) error {
+func (s *UserService) ChangePassword(ctx context.Context, userID uint, newPassword string) error {
 	// Get user
 	user, err := s.repo.GetByID(ctx, userID)
 	if err != nil {

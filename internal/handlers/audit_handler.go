@@ -183,7 +183,14 @@ func (h *AuditHandler) GetMyAuditLogs(c *gin.Context) {
 		return
 	}
 
-	userID := userIDInterface.(uint)
+	userID, ok := userIDInterface.(uint)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"success": false,
+			"message": "Invalid user context",
+		})
+		return
+	}
 	limit := 50
 
 	if limitStr := c.Query("limit"); limitStr != "" {

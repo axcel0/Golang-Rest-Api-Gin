@@ -220,10 +220,15 @@ func (c *Client) WritePump() {
 	for {
 		select {
 		case message, ok := <-c.Send:
-			c.Conn.SetWriteDeadline(time.Now().Add(10 * time.Second))
+			if err := c.Conn.SetWriteDeadline(time.Now().Add(10 * time.Second)); err != nil {
+				logger.Error("Failed to set write deadline", "error", err, "client_id", c.ID)
+				return
+			}
 			if !ok {
 				// Hub closed the channel
-				c.Conn.WriteMessage(CloseMessage, []byte{})
+				if err := c.Conn.WriteMessage(CloseMessage, []byte{}); err != nil {
+					logger.Error("Failed to write close message", "error", err, "client_id", c.ID)
+				}
 				return
 			}
 
@@ -240,7 +245,10 @@ func (c *Client) WritePump() {
 			}
 
 		case <-ticker.C:
-			c.Conn.SetWriteDeadline(time.Now().Add(10 * time.Second))
+			if err := c.Conn.SetWriteDeadline(time.Now().Add(10 * time.Second)); err != nil {
+				logger.Error("Failed to set write deadline", "error", err, "client_id", c.ID)
+				return
+			}
 			if err := c.Conn.WriteMessage(PingMessage, nil); err != nil {
 				return
 			}
@@ -255,9 +263,14 @@ func (c *Client) ReadPump() {
 		c.Conn.Close()
 	}()
 
-	c.Conn.SetReadDeadline(time.Now().Add(60 * time.Second))
+	if err := c.Conn.SetReadDeadline(time.Now().Add(60 * time.Second)); err != nil {
+		logger.Error("Failed to set read deadline", "error", err, "client_id", c.ID)
+	}
 	c.Conn.SetPongHandler(func(string) error {
-		c.Conn.SetReadDeadline(time.Now().Add(60 * time.Second))
+		if err := c.Conn.SetReadDeadline(time.Now().Add(60 * time.Second)); err != nil {
+			logger.Error("Failed to extend read deadline on pong", "error", err, "client_id", c.ID)
+			return err
+		}
 		return nil
 	})
 

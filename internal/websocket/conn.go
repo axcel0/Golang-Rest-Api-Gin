@@ -50,7 +50,7 @@ func IsUnexpectedCloseError(err error, expectedCodes ...int) bool {
 var Upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
 	WriteBufferSize: 1024,
-	CheckOrigin: func(r *http.Request) bool {
+	CheckOrigin: func(_ *http.Request) bool {
 		// Allow all origins in development
 		// In production, restrict this to your domain
 		return true
